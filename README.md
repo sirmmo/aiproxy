@@ -7,6 +7,8 @@
 
 **An OpenAI-compatible gateway that turns any LLM into a more capable one by fusing it with a reusable fabric of MCP servers.**
 
+📖 **Documentation:** https://sirmmo.github.io/aiproxy/
+
 Point any OpenAI client at aiproxy, pick one of your configured *assistants* as the `model`, and the gateway runs the whole agentic tool loop for you — calling the wrapped LLM, executing tools against your [Model Context Protocol](https://modelcontextprotocol.io) servers, feeding results back — and returns a normal OpenAI response. From the client's side it just looks like a smarter model.
 
 ```

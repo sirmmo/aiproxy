@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>aiproxy — OpenAI-compatible MCP gateway</title>
+<meta name="description" content="An OpenAI-compatible gateway that turns any LLM into a more capable one by fusing it with a reusable fabric of MCP servers." />
+<style>
+  :root {
+    --bg: #0d1117; --panel: #131a24; --panel-2: #0f1620; --border: #232c3b;
+    --fg: #e6edf3; --muted: #9aa7b6; --accent: #7c9cff; --accent-2: #5eead4;
+    --code-bg: #0b1017; --pill: #1b2432;
+    --radius: 12px; --maxw: 1180px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #ffffff; --panel: #f7f9fc; --panel-2: #ffffff; --border: #e3e8ef;
+      --fg: #1c2430; --muted: #5a6674; --accent: #3b5bdb; --accent-2: #0d9488;
+      --code-bg: #0d1117; --pill: #eef2f8;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
+
+  /* top bar */
+  header.top {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .top-inner { max-width: var(--maxw); margin: 0 auto; padding: 12px 20px;
+    display: flex; align-items: center; gap: 14px; }
+  .brand { font-weight: 700; letter-spacing: .3px; font-size: 18px; display: flex; align-items: center; gap: 9px; }
+  .brand .dot { width: 11px; height: 11px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 0 14px var(--accent); }
+  .top-links { margin-left: auto; display: flex; gap: 18px; font-size: 14.5px; }
+  .top-links a { color: var(--muted); }
+  .top-links a:hover { color: var(--fg); text-decoration: none; }
+
+  /* hero */
+  .hero { max-width: var(--maxw); margin: 0 auto; padding: 64px 20px 34px; }
+  .hero h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.5px; }
+  .hero h1 .grad { background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero p.lead { font-size: clamp(17px, 2.4vw, 20px); color: var(--muted); max-width: 760px; margin: 0 0 26px; }
+  .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 22px; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 10px;
+    font-weight: 600; font-size: 15px; border: 1px solid var(--border); }
+  .btn.primary { background: linear-gradient(120deg, var(--accent), var(--accent-2)); color: #08111e; border: none; }
+  .btn.primary:hover { text-decoration: none; filter: brightness(1.06); }
+  .btn.ghost { background: var(--panel); color: var(--fg); }
+  .btn.ghost:hover { text-decoration: none; border-color: var(--accent); }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .badges img { height: 20px; }
+
+  /* layout */
+  .layout { max-width: var(--maxw); margin: 0 auto; padding: 20px; display: grid;
+    grid-template-columns: 220px 1fr; gap: 40px; align-items: start; }
+  nav.side { position: sticky; top: 76px; font-size: 14.5px; }
+  nav.side .grp { text-transform: uppercase; font-size: 11.5px; letter-spacing: .7px; color: var(--muted);
+    margin: 18px 0 8px; }
+  nav.side a { display: block; color: var(--muted); padding: 5px 10px; border-radius: 7px; border-left: 2px solid transparent; }
+  nav.side a:hover { color: var(--fg); background: var(--panel); text-decoration: none; }
+
+  main { min-width: 0; }
+  section { margin-bottom: 46px; scroll-margin-top: 84px; }
+  section > h2 { font-size: 26px; margin: 0 0 14px; letter-spacing: -.3px;
+    padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+  section h3 { font-size: 18px; margin: 26px 0 10px; }
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 14px; padding-left: 20px; }
+  li { margin: 5px 0; }
+  .muted { color: var(--muted); }
+
+  /* code */
+  pre { background: var(--code-bg); color: #e6edf3; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px 18px; overflow-x: auto; font-size: 13.5px; line-height: 1.6; margin: 0 0 16px; }
+  pre .c { color: #6b7789; } pre .k { color: #7c9cff; } pre .s { color: #7ee0b8; } pre .n { color: #e6c07b; }
+  :not(pre) > code { background: var(--pill); padding: 2px 7px; border-radius: 6px; font-size: 13px;
+    border: 1px solid var(--border); color: var(--fg); }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .flow { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; overflow-x: auto; }
+  .flow pre { background: transparent; border: none; padding: 0; color: var(--muted); font-size: 12.5px; }
+
+  table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 14.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 12.5px; text-transform: uppercase; letter-spacing: .5px; }
+  td code { white-space: nowrap; }
+
+  .note { border-left: 3px solid var(--accent); background: var(--panel); padding: 12px 16px;
+    border-radius: 0 10px 10px 0; margin: 0 0 16px; color: var(--muted); }
+  .note b { color: var(--fg); }
+
+  footer { border-top: 1px solid var(--border); margin-top: 30px; }
+  .foot-inner { max-width: var(--maxw); margin: 0 auto; padding: 26px 20px; color: var(--muted); font-size: 14px;
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    nav.side { position: static; display: none; }
+    .grid2 { grid-template-columns: 1fr; }
+    .top-links { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <span class="brand"><span class="dot"></span> aiproxy</span>
+    <nav class="top-links">
+      <a href="#overview">Overview</a>
+      <a href="#quickstart">Quick start</a>
+      <a href="#config">Config</a>
+      <a href="#api">API</a>
+      <a href="#admin">Admin</a>
+      <a href="https://github.com/sirmmo/aiproxy">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Turn any LLM into a <span class="grad">more capable</span> one.</h1>
+  <p class="lead">
+    aiproxy is an OpenAI-compatible gateway that fuses a wrapped LLM with a reusable fabric of
+    <a href="https://modelcontextprotocol.io">Model Context Protocol</a> servers. Point any OpenAI client at it,
+    pick an <em>assistant</em> as the model, and the gateway runs the whole agentic tool loop for you —
+    returning a normal OpenAI response.
+  </p>
+  <div class="cta">
+    <a class="btn primary" href="#quickstart">Get started →</a>
+    <a class="btn ghost" href="https://github.com/sirmmo/aiproxy">★ Star on GitHub</a>
+    <a class="btn ghost" href="https://github.com/sirmmo/aiproxy/pkgs/container/aiproxy">ghcr.io image</a>
+  </div>
+  <div class="badges">
+    <img alt="ci" src="https://github.com/sirmmo/aiproxy/actions/workflows/ci.yml/badge.svg">
+    <img alt="publish" src="https://github.com/sirmmo/aiproxy/actions/workflows/publish.yml/badge.svg">
+    <img alt="license" src="https://img.shields.io/badge/License-MIT-yellow.svg">
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="side">
+    <div class="grp">Start</div>
+    <a href="#overview">Overview</a>
+    <a href="#quickstart">Quick start</a>
+    <div class="grp">Configure</div>
+    <a href="#config">Configuration</a>
+    <a href="#backends">Backends</a>
+    <a href="#mcp">MCP servers</a>
+    <a href="#assistants">Assistants</a>
+    <div class="grp">Use</div>
+    <a href="#api">OpenAI API</a>
+    <a href="#admin">Admin API</a>
+    <a href="#auth">Auth</a>
+    <div class="grp">Build</div>
+    <a href="#dev">Development</a>
+  </nav>
+
+  <main>
+    <section id="overview">
+      <h2>Overview</h2>
+      <p>
+        MCP gives you a growing ecosystem of tool servers — web fetch, filesystem, databases, search, your own
+        APIs. But wiring those tools into <em>every</em> app and <em>every</em> model is repetitive. aiproxy makes
+        that infrastructure <b>reusable and model-agnostic</b>: define your MCP servers and LLM backends once,
+        compose them into named <b>assistants</b>, and every OpenAI-compatible app in your stack gets a
+        tool-augmented model for free — no client changes, no SDK lock-in.
+      </p>
+      <div class="flow">
+<pre>┌────────────┐   OpenAI /v1/chat/completions   ┌──────────────────────────────┐
+│ Any OpenAI │ ──────────────────────────────▶ │            aiproxy           │
+│   client   │ ◀────────────────────────────── │   ┌──────────────────────┐   │
+└────────────┘        OpenAI response          │   │      agent loop      │   │
+                                                │   └──┬───────────────┬───┘   │
+                                                │      │ LLM turn      │ tools │
+                                                │      ▼               ▼       │
+                                                │  ┌────────┐   ┌────────────┐ │
+                                                │  │ backend│   │ MCP servers│ │
+                                                │  │ OpenAI │   │ fetch, fs, │ │
+                                                │  │/Anthro-│   │ http, ...  │ │
+                                                │  │  pic   │   └────────────┘ │
+                                                │  └────────┘                  │
+                                                └──────────────────────────────┘</pre>
+      </div>
+      <div class="grid2">
+        <div class="card"><b>OpenAI-compatible</b><p class="muted" style="margin:6px 0 0">Streaming &amp; non-streaming <code>/v1/chat/completions</code> + <code>/v1/models</code>. Works with the OpenAI SDKs, LangChain, LlamaIndex, curl.</p></div>
+        <div class="card"><b>Wraps any LLM</b><p class="muted" style="margin:6px 0 0">OpenAI-compatible backends (OpenAI, Groq, vLLM, Ollama, …) and native Anthropic, behind one interface.</p></div>
+        <div class="card"><b>Reusable MCP fabric</b><p class="muted" style="margin:6px 0 0"><code>stdio</code>, <code>sse</code>, <code>streamable-http</code>. Persistent sessions, namespaced tools, concurrent execution.</p></div>
+        <div class="card"><b>Runtime admin API</b><p class="muted" style="margin:6px 0 0">Add / edit / remove assistants, backends and MCP servers without a restart.</p></div>
+      </div>
+    </section>
+
+    <section id="quickstart">
+      <h2>Quick start</h2>
+      <p>Run the prebuilt multi-arch image from the GitHub Container Registry:</p>
+<pre><span class="c"># configure secrets + assistants</span>
+cp .env.example .env
+cp config.example.yaml config.yaml
+
+docker run --rm -p <span class="n">8000</span>:8000 --env-file .env \
+  -v <span class="s">"$PWD/config.yaml:/app/config.yaml:ro"</span> \
+  ghcr.io/sirmmo/aiproxy:latest</pre>
+      <p>Then talk to it exactly like OpenAI:</p>
+<pre>curl http://localhost:8000/v1/chat/completions \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{
+    "model": "research-assistant",
+    "messages": [{"role":"user","content":"Summarize https://modelcontextprotocol.io"}]
+  }'</span></pre>
+      <p>…or with the OpenAI Python SDK — no code changes beyond the base URL:</p>
+<pre><span class="k">from</span> openai <span class="k">import</span> OpenAI
+
+client = OpenAI(base_url=<span class="s">"http://localhost:8000/v1"</span>, api_key=<span class="s">"unused-or-PROXY_API_KEY"</span>)
+resp = client.chat.completions.create(
+    model=<span class="s">"research-assistant"</span>,          <span class="c"># an assistant, not a raw model</span>
+    messages=[{<span class="s">"role"</span>: <span class="s">"user"</span>, <span class="s">"content"</span>: <span class="s">"What's on the MCP homepage?"</span>}],
+)
+<span class="k">print</span>(resp.choices[0].message.content)</pre>
+      <div class="note"><b>Streaming</b> works exactly as clients expect (<code>stream=True</code>): content tokens flow through while tool rounds run transparently between them.</div>
+    </section>
+
+    <section id="config">
+      <h2>Configuration</h2>
+      <p>
+        Everything is declared in <code>config.yaml</code>. <code>${VAR}</code> / <code>${VAR:-default}</code> are
+        expanded from the environment, so keep secrets in <code>.env</code>.
+      </p>
+<pre><span class="k">mcp_servers</span>:
+  fetch:                                   <span class="c"># a reusable MCP server</span>
+    transport: stdio
+    command: uvx
+    args: [<span class="s">"mcp-server-fetch"</span>]
+
+<span class="k">backends</span>:
+  anthropic:                               <span class="c"># a wrapped LLM provider</span>
+    kind: anthropic                        <span class="c"># or "openai" for any compat endpoint</span>
+    base_url: https://api.anthropic.com/v1
+    api_key: ${ANTHROPIC_API_KEY}
+
+<span class="k">assistants</span>:
+  - name: research-assistant               <span class="c"># ← clients pass this as `model`</span>
+    backend: anthropic
+    model: claude-sonnet-5
+    system_prompt: <span class="s">"You are a meticulous research assistant. Cite your sources."</span>
+    mcp_servers: [fetch]
+    max_tool_iterations: 8
+    temperature: 0.2</pre>
+    </section>
+
+    <section id="backends">
+      <h2>Backends</h2>
+      <table>
+        <tr><th>kind</th><th>Talks to</th><th>Auth header</th></tr>
+        <tr><td><code>openai</code></td><td>Any OpenAI-compatible <code>/chat/completions</code> — OpenAI, Groq, Together, Mistral, vLLM, Ollama (<code>/v1</code>), LM&nbsp;Studio, OpenRouter…</td><td><code>Authorization: Bearer</code></td></tr>
+        <tr><td><code>anthropic</code></td><td>Native Anthropic <code>/messages</code></td><td><code>x-api-key</code></td></tr>
+      </table>
+      <p class="muted">
+        The Anthropic backend translates the canonical chat messages ↔ the Messages API (system prompt,
+        <code>tool_use</code>/<code>tool_result</code> blocks, streaming events, stop-reason mapping), so tool use
+        works first-class with Claude.
+      </p>
+    </section>
+
+    <section id="mcp">
+      <h2>MCP servers</h2>
+      <table>
+        <tr><th>transport</th><th>Fields</th></tr>
+        <tr><td><code>stdio</code></td><td><code>command</code>, <code>args</code>, <code>env</code>, <code>cwd</code></td></tr>
+        <tr><td><code>sse</code></td><td><code>url</code>, <code>headers</code></td></tr>
+        <tr><td><code>http</code> / <code>streamable-http</code></td><td><code>url</code>, <code>headers</code></td></tr>
+      </table>
+      <p class="muted">
+        Tools are exposed to the model as <code>&lt;server&gt;__&lt;tool&gt;</code> and routed back to the right
+        server on call. Sessions are persistent (one subprocess per stdio server, reused across requests) and
+        started lazily on first use. Node (<code>npx</code>) and <code>uvx</code> are baked into the image, so most
+        community MCP servers install on demand.
+      </p>
+    </section>
+
+    <section id="assistants">
+      <h2>Assistants</h2>
+      <p>
+        An <b>assistant</b> is a virtual model exposed via the OpenAI <code>model</code> field. It binds one backend,
+        a system prompt, and a set of MCP servers, plus a tool-loop budget.
+      </p>
+      <table>
+        <tr><th>Field</th><th>Meaning</th></tr>
+        <tr><td><code>name</code></td><td>What clients pass as <code>model</code></td></tr>
+        <tr><td><code>backend</code></td><td>Which configured backend to call</td></tr>
+        <tr><td><code>model</code></td><td>The upstream model id (e.g. <code>gpt-4o</code>, <code>claude-sonnet-5</code>)</td></tr>
+        <tr><td><code>system_prompt</code></td><td>Prepended if the request has no system message</td></tr>
+        <tr><td><code>mcp_servers</code></td><td>List of MCP servers whose tools are attached</td></tr>
+        <tr><td><code>max_tool_iterations</code></td><td>Tool-loop budget; the final turn drops tools to force an answer</td></tr>
+        <tr><td><code>temperature</code>, <code>top_p</code>, <code>max_tokens</code></td><td>Defaults; client-supplied params override them</td></tr>
+      </table>
+    </section>
+
+    <section id="api">
+      <h2>OpenAI API</h2>
+      <table>
+        <tr><th>Method &amp; path</th><th>Purpose</th></tr>
+        <tr><td><code>GET /v1/models</code></td><td>List configured assistants as OpenAI models</td></tr>
+        <tr><td><code>POST /v1/chat/completions</code></td><td>Chat completion; runs the MCP tool loop. Supports <code>stream</code></td></tr>
+      </table>
+      <h3>How a request flows</h3>
+      <ul>
+        <li>Client posts to <code>/v1/chat/completions</code> with <code>model: "&lt;assistant&gt;"</code>.</li>
+        <li>The gateway resolves the assistant → backend + MCP servers, and ensures those servers are connected.</li>
+        <li>It builds the OpenAI tool schema and enters the agent loop: call the LLM; if it requests tools, execute
+            them <b>concurrently</b> against the MCP servers and feed results back; repeat until the model answers or
+            <code>max_tool_iterations</code> is hit.</li>
+        <li>Returns a standard <code>chat.completion</code> (or streams <code>chat.completion.chunk</code>s), with the
+            assistant name as <code>model</code> and aggregated token usage.</li>
+      </ul>
+    </section>
+
+    <section id="admin">
+      <h2>Admin API</h2>
+      <p>Mutate the live registry without restarting (set <code>ADMIN_API_KEY</code> to protect it):</p>
+<pre><span class="c"># see what tools a server actually advertises</span>
+curl localhost:8000/admin/mcp/fetch/tools
+
+<span class="c"># add / replace an assistant at runtime</span>
+curl -X PUT localhost:8000/admin/assistants/coder \
+  -H <span class="s">"Content-Type: application/json"</span> \
+  -d <span class="s">'{"backend":"openai","model":"gpt-4o","mcp_servers":["filesystem"],
+       "system_prompt":"You are a coding agent."}'</span></pre>
+      <table>
+        <tr><th>Method &amp; path</th><th>Purpose</th></tr>
+        <tr><td><code>GET /admin/config</code></td><td>Dump current registry (secrets redacted)</td></tr>
+        <tr><td><code>GET/PUT/DELETE /admin/assistants[/{name}]</code></td><td>Manage assistants</td></tr>
+        <tr><td><code>GET/PUT/DELETE /admin/backends[/{name}]</code></td><td>Manage LLM backends</td></tr>
+        <tr><td><code>GET/PUT/DELETE /admin/mcp[/{name}]</code></td><td>Manage MCP servers</td></tr>
+        <tr><td><code>GET /admin/mcp/{name}/tools</code></td><td>Introspect a server's tools</td></tr>
+      </table>
+      <div class="note">Admin changes are in-memory. Use <code>GET /admin/config</code> to export current state and persist it into <code>config.yaml</code> yourself.</div>
+    </section>
+
+    <section id="auth">
+      <h2>Auth</h2>
+      <ul>
+        <li><b><code>/v1/*</code></b> — if <code>proxy_api_keys</code> is non-empty in config, clients must send
+          <code>Authorization: Bearer &lt;key&gt;</code>.</li>
+        <li><b><code>/admin/*</code></b> — if <code>ADMIN_API_KEY</code> is set, admin calls must send
+          <code>Authorization: Bearer &lt;ADMIN_API_KEY&gt;</code>.</li>
+      </ul>
+      <p class="muted">Both are open when unset (handy for local dev; lock them down in production).</p>
+    </section>
+
+    <section id="dev">
+      <h2>Development</h2>
+      <p>The recommended path is Docker — a clean Python 3.12 with <code>node</code>/<code>uvx</code> available.</p>
+<pre>docker build -t aiproxy:latest .
+
+<span class="c"># end-to-end check: spawns the demo MCP server and drives the full agent</span>
+<span class="c"># loop (streaming + non-streaming) with a scripted fake LLM. No API key needed:</span>
+docker run --rm aiproxy:latest python scripts/smoke_test.py</pre>
+      <p class="muted">See the <a href="https://github.com/sirmmo/aiproxy#readme">README</a> for the full reference and a no-Docker (uv) workflow.</p>
+    </section>
+  </main>
+</div>
+
+<footer>
+  <div class="foot-inner">
+    <span>aiproxy — MIT licensed. Built with FastAPI + the MCP Python SDK.</span>
+    <span><a href="https://github.com/sirmmo/aiproxy">github.com/sirmmo/aiproxy</a></span>
+  </div>
+</footer>
+
+</body>
+</html>
