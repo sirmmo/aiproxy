@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  smoke-test:
+    name: build image + end-to-end smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          tags: aiproxy:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Run end-to-end smoke test
+        # Spawns the demo MCP server and drives the full agent loop
+        # (streaming + non-streaming) against a scripted fake LLM. No secrets needed.
+        run: docker run --rm aiproxy:ci python scripts/smoke_test.py

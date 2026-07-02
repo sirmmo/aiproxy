@@ -1,0 +1,15 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.env
+config.yaml
+data/*
+!data/.gitkeep
+scratchpad
+*.md
+!README.md

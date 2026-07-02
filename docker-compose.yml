@@ -1,0 +1,23 @@
+services:
+  aiproxy:
+    build: .
+    image: aiproxy:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # Secrets referenced by config.yaml via ${VAR}. Set them in .env.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PROXY_API_KEY: ${PROXY_API_KEY:-}
+      ADMIN_API_KEY: ${ADMIN_API_KEY:-}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CONFIG_PATH: /app/config.yaml
+    volumes:
+      # Your live config (copy config.example.yaml -> config.yaml first).
+      - ./config.yaml:/app/config.yaml:ro
+      # Data directory exposed to the filesystem MCP server, if used.
+      - ./data:/data
+    restart: unless-stopped
+    # Lets stdio MCP servers reach a host-run local LLM (e.g. Ollama) if needed.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

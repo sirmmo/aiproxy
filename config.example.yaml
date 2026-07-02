@@ -1,0 +1,81 @@
+# ---------------------------------------------------------------------------
+# aiproxy configuration
+#
+# Copy to config.yaml and edit. ${VAR} / ${VAR:-default} are expanded from the
+# environment at load time, so keep real secrets in the environment (.env), not
+# in this file.
+# ---------------------------------------------------------------------------
+
+# Reusable MCP servers. Each is either a stdio subprocess or an sse/http URL.
+mcp_servers:
+  # A local demo server shipped with this repo (no network needed).
+  echo:
+    transport: stdio
+    command: python
+    args: ["examples/echo_mcp_server.py"]
+    description: Demo tools — add / echo / uppercase.
+
+  # Fetch web pages as markdown (installed on demand via uvx; needs network).
+  fetch:
+    transport: stdio
+    command: uvx
+    args: ["mcp-server-fetch"]
+    description: Retrieve and convert web pages.
+
+  # Read-only access to a mounted directory.
+  filesystem:
+    transport: stdio
+    command: npx
+    args: ["-y", "@modelcontextprotocol/server-filesystem", "/data"]
+    description: Read/write files under /data.
+
+  # Example of a remote MCP server over streamable HTTP.
+  # remote_tools:
+  #   transport: http
+  #   url: https://mcp.example.com/mcp
+  #   headers:
+  #     Authorization: "Bearer ${REMOTE_MCP_TOKEN}"
+
+# Upstream LLM providers.
+backends:
+  openai:
+    kind: openai
+    base_url: https://api.openai.com/v1
+    api_key: ${OPENAI_API_KEY}
+
+  # Native Anthropic Messages API (extended tool use, thinking-capable models).
+  anthropic:
+    kind: anthropic
+    base_url: https://api.anthropic.com/v1
+    api_key: ${ANTHROPIC_API_KEY}
+
+  # Any OpenAI-compatible endpoint works — e.g. a local model server.
+  local:
+    kind: openai
+    base_url: ${LOCAL_LLM_URL:-http://host.docker.internal:11434/v1}
+    api_key: ${LOCAL_LLM_KEY:-not-needed}
+
+# Virtual models. The `name` is what clients pass as the OpenAI `model` field.
+assistants:
+  - name: research-assistant
+    backend: anthropic
+    model: claude-sonnet-5
+    description: A web-capable research assistant.
+    system_prompt: |
+      You are a meticulous research assistant. Use the available tools to fetch
+      primary sources before answering. Cite the URLs you consulted.
+    mcp_servers: [fetch]
+    max_tool_iterations: 8
+    temperature: 0.2
+
+  - name: calculator
+    backend: openai
+    model: gpt-4o-mini
+    description: A demo assistant wired to the local echo tools.
+    system_prompt: Use the tools to compute answers precisely.
+    mcp_servers: [echo]
+    max_tool_iterations: 4
+
+# If non-empty, clients must send `Authorization: Bearer <key>` to /v1/*.
+proxy_api_keys:
+  - ${PROXY_API_KEY:-}
