@@ -29,6 +29,13 @@ def _redact(cfg: BackendConfig) -> dict[str, Any]:
     return data
 
 
+def _redact_apiman(cfg) -> dict[str, Any]:
+    data = cfg.model_dump()
+    if data.get("secret"):
+        data["secret"] = "***redacted***"
+    return data
+
+
 @router.get("/config")
 async def dump_config(request: Request) -> dict[str, Any]:
     state = _state(request)
@@ -37,6 +44,8 @@ async def dump_config(request: Request) -> dict[str, Any]:
         "backends": {n: _redact(c) for n, c in state.config.backends.items()},
         "assistants": [a.model_dump() for a in state.assistants.values()],
         "proxy_api_keys": ["***redacted***"] if state.config.proxy_api_keys else [],
+        "apiman": _redact_apiman(state.config.apiman),
+        "auth_providers": [p.name for p in state.auth.providers],
     }
 
 

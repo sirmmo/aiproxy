@@ -19,7 +19,7 @@ import re
 from typing import Any, Literal, Optional
 
 import yaml
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 _ENV_RE = re.compile(r"\$\{([A-Za-z_][A-Za-z0-9_]*)(?::-([^}]*))?\}")
 
@@ -84,12 +84,67 @@ class AssistantConfig(BaseModel):
     extra_body: dict[str, Any] = Field(default_factory=dict)
 
 
+class ApimanConfig(BaseModel):
+    """Validate caller API keys against an Apiman deployment, in parallel to
+    the static ``proxy_api_keys`` list.
+
+    Two topologies are supported (pick one with ``mode``):
+
+    * ``gateway_probe`` – aiproxy receives the caller's key and validates it by
+      making a cheap request *through* the Apiman gateway to a registered probe
+      API. A 2xx means the key is valid for that API + plan; 401/403 means it is
+      not. Results are cached for ``cache_ttl`` seconds.
+    * ``trusted_header`` – the Apiman gateway is deployed in front of aiproxy and
+      injects a shared-secret header (via an "Add Header" policy); aiproxy
+      authorizes any request carrying the matching secret and never sees raw keys.
+    """
+
+    enabled: bool = False
+    mode: Literal["gateway_probe", "trusted_header"] = "gateway_probe"
+
+    # --- gateway_probe ---
+    # Base gateway URL, e.g. http://apiman-gw:8080/apiman-gateway
+    gateway_url: Optional[str] = None
+    # The probe managed API as "{org}/{api}/{version}", e.g. "aiproxy/authcheck/1.0".
+    probe_api: Optional[str] = None
+    # Path appended after {version}; its backend should return 2xx (e.g. aiproxy /health).
+    probe_path: str = ""
+    # Header the gateway expects the API key in (Apiman default is X-API-Key).
+    api_key_header: str = "X-API-Key"
+    cache_ttl: float = 60.0
+    timeout: float = 5.0
+
+    # --- trusted_header ---
+    header: Optional[str] = None  # e.g. X-Apiman-Gateway-Token
+    secret: Optional[str] = None
+
+    @model_validator(mode="after")
+    def _check_mode_fields(self) -> "ApimanConfig":
+        if not self.enabled:
+            return self
+        if self.mode == "gateway_probe":
+            if not self.gateway_url or not self.probe_api:
+                raise ValueError(
+                    "apiman.gateway_probe requires 'gateway_url' and 'probe_api'"
+                )
+            if self.probe_api.count("/") != 2:
+                raise ValueError("apiman.probe_api must be '{org}/{api}/{version}'")
+        elif self.mode == "trusted_header":
+            if not self.header or not self.secret:
+                raise ValueError(
+                    "apiman.trusted_header requires 'header' and 'secret'"
+                )
+        return self
+
+
 class AppConfig(BaseModel):
     mcp_servers: dict[str, MCPServerConfig] = Field(default_factory=dict)
     backends: dict[str, BackendConfig] = Field(default_factory=dict)
     assistants: list[AssistantConfig] = Field(default_factory=list)
     # If non-empty, callers of /v1/* must present a matching Bearer token.
     proxy_api_keys: list[str] = Field(default_factory=list)
+    # Optional Apiman-backed key validation, checked in parallel to proxy_api_keys.
+    apiman: ApimanConfig = Field(default_factory=ApimanConfig)
 
     @field_validator("proxy_api_keys", mode="before")
     @classmethod

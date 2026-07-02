@@ -350,13 +350,35 @@ curl -X PUT localhost:8000/admin/assistants/coder \
 
     <section id="auth">
       <h2>Auth</h2>
-      <ul>
-        <li><b><code>/v1/*</code></b> — if <code>proxy_api_keys</code> is non-empty in config, clients must send
-          <code>Authorization: Bearer &lt;key&gt;</code>.</li>
-        <li><b><code>/admin/*</code></b> — if <code>ADMIN_API_KEY</code> is set, admin calls must send
-          <code>Authorization: Bearer &lt;ADMIN_API_KEY&gt;</code>.</li>
-      </ul>
-      <p class="muted">Both are open when unset (handy for local dev; lock them down in production).</p>
+      <p>
+        <code>/v1/*</code> auth is a <b>pluggable chain</b> — a request is authorized if <b>any</b> enabled
+        provider accepts it, so static keys and <a href="https://www.apiman.io">Apiman</a> run in parallel. The
+        caller's key is read from <code>Authorization: Bearer</code>, the <code>X-API-Key</code> header, or the
+        <code>?apikey=</code> query param.
+      </p>
+      <table>
+        <tr><th>Provider</th><th>Enable with</th><th>Accepts when…</th></tr>
+        <tr><td><b>Static keys</b></td><td>non-empty <code>proxy_api_keys</code></td><td>the key matches an entry</td></tr>
+        <tr><td><b>Apiman <code>gateway_probe</code></b></td><td><code>apiman.mode: gateway_probe</code></td><td>the key validates via a round-trip through the Apiman gateway (2xx), cached</td></tr>
+        <tr><td><b>Apiman <code>trusted_header</code></b></td><td><code>apiman.mode: trusted_header</code></td><td>the request carries the shared secret the gateway injects</td></tr>
+      </table>
+      <h3>Apiman — <code>gateway_probe</code></h3>
+      <p class="muted">aiproxy stays directly reachable and validates each caller's key against Apiman. Register a small "auth check" API whose backend is aiproxy's <code>/health</code>:</p>
+<pre><span class="k">apiman</span>:
+  enabled: true
+  mode: gateway_probe
+  gateway_url: http://apiman-gateway:8080/apiman-gateway
+  probe_api: aiproxy/authcheck/1.0    <span class="c"># {org}/{api}/{version}</span>
+  probe_path: health                  <span class="c"># backend path that returns 2xx</span>
+  cache_ttl: 60</pre>
+      <h3>Apiman — <code>trusted_header</code></h3>
+      <p class="muted">Put the Apiman gateway in front of aiproxy; an "Add Header" policy injects a shared secret aiproxy trusts (it never sees raw keys):</p>
+<pre><span class="k">apiman</span>:
+  enabled: true
+  mode: trusted_header
+  header: X-Apiman-Gateway-Token
+  secret: ${APIMAN_SHARED_SECRET}</pre>
+      <p class="muted"><b><code>/admin/*</code></b> is separate: if <code>ADMIN_API_KEY</code> is set, admin calls must send <code>Authorization: Bearer &lt;ADMIN_API_KEY&gt;</code>. Everything is open when unset (handy for local dev; lock it down in production).</p>
     </section>
 
     <section id="dev">

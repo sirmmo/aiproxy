@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 from typing import Optional
 
+from .auth import AuthManager
 from .backends import Backend, build_backend
 from .config import AppConfig, AssistantConfig, BackendConfig, MCPServerConfig, load_config
 from .mcp_manager import MCPManager
@@ -20,6 +21,7 @@ class AppState:
         self.config = config
         self.mcp = MCPManager(config.mcp_servers)
         self.assistants: dict[str, AssistantConfig] = {a.name: a for a in config.assistants}
+        self.auth = AuthManager.from_config(config)
         self._backends: dict[str, Backend] = {}
         self._lock = asyncio.Lock()
 
@@ -83,3 +85,4 @@ class AppState:
         await self.mcp.shutdown()
         for backend in list(self._backends.values()):
             await backend.aclose()
+        await self.auth.aclose()

@@ -41,6 +41,7 @@ MCP gives you a growing ecosystem of tool servers (web fetch, filesystem, databa
 - **Reusable MCP fabric** — attach any number of MCP servers (`stdio`, `sse`, `streamable-http`) to each assistant. Tools are namespaced per server and executed transparently.
 - **Assistants as virtual models** — each `model` a client can pick is a backend + system prompt + set of MCP servers + tool-loop budget.
 - **Runtime admin API** — add/edit/remove assistants, backends and MCP servers without a restart; introspect any server's tools.
+- **Pluggable auth** — static API keys and [Apiman](https://www.apiman.io) key validation (gateway round-trip or trusted-header topologies) run in parallel.
 - **Docker-first** — `docker compose up` and you have an endpoint. Node (`npx`) and `uvx` are baked in so most MCP servers install on demand.
 
 ## Quick start (Docker)
@@ -169,10 +170,45 @@ curl -X PUT localhost:8000/admin/assistants/coder \
 
 ## Auth
 
-- **`/v1/*`** — if `proxy_api_keys` is non-empty in config, clients must send `Authorization: Bearer <key>`.
-- **`/admin/*`** — if `ADMIN_API_KEY` is set, admin calls must send `Authorization: Bearer <ADMIN_API_KEY>`.
+`/v1/*` auth is a **pluggable chain** — a request is authorized if **any** enabled provider accepts it, so static keys and [Apiman](https://www.apiman.io) run in parallel:
 
-Both are open when unset (handy for local dev; lock them down in production).
+| Provider | Enable with | Accepts a request when… |
+|---|---|---|
+| **Static keys** | non-empty `proxy_api_keys` | the caller's key matches an entry |
+| **Apiman `gateway_probe`** | `apiman.enabled: true`, `mode: gateway_probe` | the key validates via a round-trip through the Apiman gateway (2xx) |
+| **Apiman `trusted_header`** | `apiman.enabled: true`, `mode: trusted_header` | the request carries the shared secret the gateway injects |
+
+The caller's key is read from `Authorization: Bearer <key>`, the `X-API-Key` header, **or** the `?apikey=` query param (matching Apiman's own conventions). If no provider is configured, `/v1/*` is open (handy for local dev).
+
+- **`/admin/*`** — separate: if `ADMIN_API_KEY` is set, admin calls must send `Authorization: Bearer <ADMIN_API_KEY>`.
+
+### Apiman integration
+
+[Apiman](https://www.apiman.io) is an open-source API-management layer (clients, plans, contracts, quotas, policies). Two topologies are supported:
+
+**`gateway_probe`** — aiproxy stays reachable directly and validates each caller's key against Apiman itself. Register a tiny "auth check" API in Apiman whose backend is aiproxy's `/health`, then:
+
+```yaml
+apiman:
+  enabled: true
+  mode: gateway_probe
+  gateway_url: http://apiman-gateway:8080/apiman-gateway
+  probe_api: aiproxy/authcheck/1.0    # {org}/{api}/{version}
+  probe_path: health                  # backend path that returns 2xx
+  cache_ttl: 60
+```
+
+On each request aiproxy calls `GET {gateway_url}/aiproxy/authcheck/1.0/health` with `X-API-Key: <caller-key>`; a 2xx authorizes the request (cached for `cache_ttl` seconds), `401/403` rejects it.
+
+**`trusted_header`** — put the Apiman gateway *in front* of aiproxy and have an "Add Header" policy inject a shared secret; aiproxy trusts any request carrying it and never sees raw keys:
+
+```yaml
+apiman:
+  enabled: true
+  mode: trusted_header
+  header: X-Apiman-Gateway-Token
+  secret: ${APIMAN_SHARED_SECRET}
+```
 
 ## Development & testing
 
@@ -223,7 +259,7 @@ app/
   agent.py           the agentic loop (streaming + non-streaming)
   backends/          openai + anthropic adapters behind one interface
   routes/            /v1 (chat) and /admin (registry) endpoints
-  auth.py            bearer-token auth
+  auth.py            pluggable auth chain (static keys + Apiman)
 examples/echo_mcp_server.py   demo stdio MCP server
 scripts/smoke_test.py         end-to-end test, no real LLM required
 ```

@@ -79,3 +79,24 @@ assistants:
 # If non-empty, clients must send `Authorization: Bearer <key>` to /v1/*.
 proxy_api_keys:
   - ${PROXY_API_KEY:-}
+
+# Optional: validate caller keys against Apiman (https://www.apiman.io), checked
+# in parallel with proxy_api_keys — a request is allowed if EITHER accepts it.
+apiman:
+  enabled: false
+  # mode: gateway_probe  -> aiproxy validates the caller's key by round-tripping
+  #                         through the Apiman gateway to a registered probe API.
+  # mode: trusted_header -> the Apiman gateway sits in front of aiproxy and injects
+  #                         a shared-secret header that aiproxy trusts.
+  mode: gateway_probe
+
+  # --- gateway_probe fields ---
+  gateway_url: ${APIMAN_GATEWAY_URL:-http://apiman-gateway:8080/apiman-gateway}
+  probe_api: aiproxy/authcheck/1.0     # {org}/{api}/{version} registered in Apiman
+  probe_path: health                   # backend path; must return 2xx (e.g. aiproxy /health)
+  api_key_header: X-API-Key            # header Apiman reads the key from
+  cache_ttl: 60                        # seconds to cache a validation result
+
+  # --- trusted_header fields (used when mode: trusted_header) ---
+  header: X-Apiman-Gateway-Token
+  secret: ${APIMAN_SHARED_SECRET:-}

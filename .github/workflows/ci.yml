@@ -27,3 +27,7 @@ jobs:
         # Spawns the demo MCP server and drives the full agent loop
         # (streaming + non-streaming) against a scripted fake LLM. No secrets needed.
         run: docker run --rm aiproxy:ci python scripts/smoke_test.py
+
+      - name: Run auth chain tests
+        # Static keys + both Apiman modes (gateway probe mocked via httpx). No network.
+        run: docker run --rm aiproxy:ci python scripts/test_auth.py
