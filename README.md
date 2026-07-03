@@ -11,23 +11,24 @@
 
 Point any OpenAI client at aiproxy, pick one of your configured *assistants* as the `model`, and the gateway runs the whole agentic tool loop for you — calling the wrapped LLM, executing tools against your [Model Context Protocol](https://modelcontextprotocol.io) servers, feeding results back — and returns a normal OpenAI response. From the client's side it just looks like a smarter model.
 
-```
-┌────────────┐   OpenAI /v1/chat/completions   ┌──────────────────────────────┐
-│ Any OpenAI │ ──────────────────────────────► │            aiproxy           │
-│   client   │ ◄────────────────────────────── │  ┌────────────────────────┐  │
-└────────────┘        OpenAI response          │  │      agent loop        │  │
-                                                │  └───┬───────────────┬────┘  │
-                                                │      │ LLM turn      │ tools │
-                                                │      ▼               ▼       │
-                                                │  ┌────────┐   ┌────────────┐ │
-                                                │  │ backend│   │ MCP servers│ │
-                                                │  │ OpenAI │   │ fetch, fs, │ │
-                                                │  │/Anthro-│   │ http, ...  │ │
-                                                │  │  pic   │   └────────────┘ │
-                                                │  └───┬────┘                  │
-                                                └──────┼───────────────────────┘
-                                                       ▼
-                                          OpenAI / Anthropic / local model
+```mermaid
+flowchart LR
+    client(["Any OpenAI client"])
+    client -- "POST /v1/chat/completions" --> gate
+    subgraph proxy["aiproxy"]
+        direction TB
+        gate["auth chain<br/>static keys | Apiman"]
+        loop(["agent loop"])
+        backend["backend adapter<br/>OpenAI-compat | native Anthropic"]
+        mcp["MCP servers<br/>fetch | filesystem | http ..."]
+        gate --> loop
+        loop -- "LLM turn" --> backend
+        backend -. "assistant / tool_calls" .-> loop
+        loop -- "tool calls" --> mcp
+        mcp -. "results" .-> loop
+    end
+    backend -- "chat / messages API" --> llm(["Upstream LLM"])
+    proxy -- "OpenAI response" --> client
 ```
 
 ## Why

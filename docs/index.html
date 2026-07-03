@@ -92,6 +92,10 @@
   .flow { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 18px; overflow-x: auto; }
   .flow pre { background: transparent; border: none; padding: 0; color: var(--muted); font-size: 12.5px; }
+  /* Mermaid: hide the raw definition until rendered, then center the SVG. */
+  pre.mermaid { text-align: center; line-height: normal; visibility: hidden; }
+  pre.mermaid[data-processed="true"] { visibility: visible; }
+  pre.mermaid svg { max-width: 100%; height: auto; }
 
   table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: 14.5px; }
   th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
@@ -179,20 +183,25 @@
         tool-augmented model for free — no client changes, no SDK lock-in.
       </p>
       <div class="flow">
-<pre>┌────────────┐   OpenAI /v1/chat/completions   ┌──────────────────────────────┐
-│ Any OpenAI │ ──────────────────────────────▶ │            aiproxy           │
-│   client   │ ◀────────────────────────────── │   ┌──────────────────────┐   │
-└────────────┘        OpenAI response          │   │      agent loop      │   │
-                                                │   └──┬───────────────┬───┘   │
-                                                │      │ LLM turn      │ tools │
-                                                │      ▼               ▼       │
-                                                │  ┌────────┐   ┌────────────┐ │
-                                                │  │ backend│   │ MCP servers│ │
-                                                │  │ OpenAI │   │ fetch, fs, │ │
-                                                │  │/Anthro-│   │ http, ...  │ │
-                                                │  │  pic   │   └────────────┘ │
-                                                │  └────────┘                  │
-                                                └──────────────────────────────┘</pre>
+<pre class="mermaid">
+flowchart LR
+    client(["Any OpenAI client"])
+    client -- "POST /v1/chat/completions" --> gate
+    subgraph proxy["aiproxy"]
+        direction TB
+        gate["auth chain&lt;br/&gt;static keys | Apiman"]
+        loop(["agent loop"])
+        backend["backend adapter&lt;br/&gt;OpenAI-compat | native Anthropic"]
+        mcp["MCP servers&lt;br/&gt;fetch | filesystem | http ..."]
+        gate --> loop
+        loop -- "LLM turn" --> backend
+        backend -. "assistant / tool_calls" .-> loop
+        loop -- "tool calls" --> mcp
+        mcp -. "results" .-> loop
+    end
+    backend -- "chat / messages API" --> llm(["Upstream LLM"])
+    proxy -- "OpenAI response" --> client
+</pre>
       </div>
       <div class="grid2">
         <div class="card"><b>OpenAI-compatible</b><p class="muted" style="margin:6px 0 0">Streaming &amp; non-streaming <code>/v1/chat/completions</code> + <code>/v1/models</code>. Works with the OpenAI SDKs, LangChain, LlamaIndex, curl.</p></div>
@@ -401,6 +410,25 @@ docker run --rm aiproxy:latest python scripts/smoke_test.py</pre>
     <span><a href="https://github.com/sirmmo/aiproxy">github.com/sirmmo/aiproxy</a></span>
   </div>
 </footer>
+
+<script type="module">
+  // Render the architecture diagram. External scripts are fine on GitHub Pages
+  // (unlike sandboxed artifacts). If the CDN is unreachable, fall back to the
+  // raw Mermaid definition so the page never shows an empty box.
+  try {
+    const { default: mermaid } = await import("https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs");
+    const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: dark ? "dark" : "default",
+      securityLevel: "loose",
+      flowchart: { curve: "basis", htmlLabels: true, useMaxWidth: true },
+    });
+    await mermaid.run({ querySelector: "pre.mermaid" });
+  } catch (err) {
+    document.querySelectorAll("pre.mermaid").forEach((el) => (el.style.visibility = "visible"));
+  }
+</script>
 
 </body>
 </html>
