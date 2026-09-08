@@ -245,6 +245,14 @@ async def main() -> None:
     assert resp["choices"][0]["message"]["content"].startswith("Result: 5.\n[truncated: "), resp
     print("  clipped:", repr(resp["choices"][0]["message"]["content"]))
 
+    print("→ tool_max_rounds=1: the decider is asked once, then the talker answers...")
+    once = TWO_MODEL.model_copy(update={"tool_max_rounds": 1})
+    decider, talker = FakeDecider([0.9, 0.9, 0.9]), FakeTalker()
+    resp = await agent.run(once, talker, toolset, [{"role": "user", "content": "add 2 and 3"}], {}, tool_backend=decider)
+    assert resp["choices"][0]["message"]["content"] == "Result: 5.0", resp
+    assert len(decider.seen) == 1 and len(resp["x_aiproxy"]["decisions"]) == 1
+    print("  one decision, tool ran, talker answered")
+
     print("→ two-model assistant: low confidence skips the tool...")
     decider, talker = FakeDecider([0.2]), FakeTalker()
     resp = await agent.run(TWO_MODEL, talker, toolset, [{"role": "user", "content": "hi"}], {}, tool_backend=decider)

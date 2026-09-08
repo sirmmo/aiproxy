@@ -1,0 +1,72 @@
+# Two-model assistant, as tested on 2026-09-08: needle-openai decides which
+# OntoRAG tool to call, MobileMoE-S-QAT (openai-MobileMoE) writes the answer.
+#
+# Services, all local Docker containers on the host network:
+#   needle-openai      ghcr.io/sirmmo/needle-openai:latest            -> :8002
+#   openai-MobileMoE   ghcr.io/sirmmo/openai-mobilemoe:latest         -> :8003
+#                      (MOBILEMOE_MODEL=facebook/MobileMoE-S-QAT, HF_TOKEN set,
+#                       MOBILEMOE_DEFAULT_REPETITION_PENALTY=1.15)
+#   ontorag-mcp        built from github.com/sirmmo/ontorag-mcp        -> :8765/mcp
+#                      (ONTORAG_RETRIEVAL=ontology, a dataset in the amol layout)
+#
+# Run aiproxy on the host network so the MCP server sees a 127.0.0.1 Host header
+# (FastMCP's DNS-rebinding guard rejects host.docker.internal with a 421):
+#   docker run -d --network host -e PORT=8010 -e CONFIG_PATH=/app/config.yaml \
+#     -v $PWD/examples/two_model_ontorag.yaml:/app/config.yaml:ro ghcr.io/sirmmo/aiproxy:latest
+mcp_servers:
+  ontorag:
+    transport: streamable-http
+    url: http://127.0.0.1:8765/mcp
+
+backends:
+  needle:
+    kind: openai
+    base_url: http://127.0.0.1:8002/v1
+    timeout: 120
+  mobilemoe-s:
+    kind: openai
+    base_url: http://127.0.0.1:8003/v1
+    timeout: 900
+
+assistants:
+  - name: ontorag-chat
+    description: needle-2 picks OntoRAG tools, MobileMoE-S-QAT writes the answer.
+    backend: mobilemoe-s
+    model: MobileMoE-S-QAT
+    tool_backend: needle
+    tool_model: needle-2
+    tool_confidence: 0.0        # needle scores these retrieval calls near 0; only explicit declines are gated
+    tool_context: turn
+    tool_max_rounds: 1
+    tool_allowlist: [ontorag__answer, ontorag__search_entities, ontorag__entity_chunks]
+    tool_result_max_chars: 5000
+    tool_arguments:
+      ontorag__answer: {k: 3, expand: 1, repo: ""}
+      ontorag__search_entities: {limit: 5, repo: ""}
+      ontorag__entity_chunks: {k: 3, repo: ""}
+    tool_descriptions:
+      ontorag__answer: Retrieve passages and facts for any question about the game world (Houses, magi, spells, creatures, places). Use for general or list questions.
+      ontorag__search_entities: Find Houses, magi, spells, creatures or places by name or alias.
+      ontorag__entity_chunks: Return the source passages linked to one named entity.
+    system_prompt: |
+      You answer questions about the Ars Magica tabletop RPG knowledge graph (the Order of Hermes, its Houses, magi, spells and creatures).
+      Use ONLY the tool results in the conversation. Be concise. Mention the chunk ids you relied on.
+      If the tool results are empty or missing, say the knowledge graph has nothing on that.
+      Answer in the language of the question.
+    mcp_servers: [ontorag]
+    max_tool_iterations: 2
+    temperature: 0
+    max_tokens: 200
+
+  # control: the same tools offered to MobileMoE directly (it ignores them)
+  - name: mobilemoe-only
+    description: MobileMoE-S-QAT with the same tools offered directly (control).
+    backend: mobilemoe-s
+    model: MobileMoE-S-QAT
+    system_prompt: You answer questions about the Ars Magica tabletop RPG knowledge graph.
+    mcp_servers: [ontorag]
+    max_tool_iterations: 2
+    temperature: 0
+    max_tokens: 200
+
+proxy_api_keys: []

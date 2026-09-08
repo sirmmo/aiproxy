@@ -136,6 +136,7 @@ assistants:
     tool_model: needle-2
     tool_confidence: 0.5          # run a call only at/above this reported confidence
     tool_context: turn            # `turn` (system prompt + current turn) or `full`
+    tool_max_rounds: 1            # ask the specialist once per turn
     tool_allowlist: [ontorag__answer, ontorag__search_entities]
     tool_result_max_chars: 6000   # cap retrieval payloads for a small answer model
     tool_arguments:               # hidden from the model, forced on every call
@@ -146,7 +147,7 @@ assistants:
     mcp_servers: [ontorag]
 ```
 
-Each round the gateway asks `tool_backend` first. If it returns tool calls whose confidence (`x_needle.confidence`, or a top-level `confidence`; backends that report none are trusted) clears `tool_confidence`, the calls run against the MCP servers and the round repeats. Otherwise `backend` answers from the conversation, tools withheld. Responses carry an `x_aiproxy.decisions` list showing every round's calls, confidence and whether they ran. `tool_context: turn` keeps specialists that truncate long inputs honest by showing them only the system prompt and the current turn. `tool_allowlist`, `tool_descriptions`, `tool_arguments` and `tool_result_max_chars` (usable on any assistant) trim what the models are told about and asked to decide: small tool-calling models degrade with large tool sets and long descriptions written for bigger models, should not be choosing page sizes or dataset ids, and a small answer model cannot absorb thousands of tokens of retrieval payload.
+Each round the gateway asks `tool_backend` first. If it returns tool calls whose confidence (`x_needle.confidence`, or a top-level `confidence`; backends that report none are trusted) clears `tool_confidence`, the calls run against the MCP servers and the round repeats. Otherwise `backend` answers from the conversation, tools withheld. Responses carry an `x_aiproxy.decisions` list showing every round's calls, confidence and whether they ran. `tool_context: turn` keeps specialists that truncate long inputs honest by showing them only the system prompt and the current turn, and `tool_max_rounds: 1` asks them once per turn, before any tool result is in view. `tool_allowlist`, `tool_descriptions`, `tool_arguments` and `tool_result_max_chars` (usable on any assistant) trim what the models are told about and asked to decide: small tool-calling models degrade with large tool sets and long descriptions written for bigger models, should not be choosing page sizes or dataset ids, and a small answer model cannot absorb thousands of tokens of retrieval payload.
 
 ### Backends
 

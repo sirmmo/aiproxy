@@ -111,6 +111,12 @@ def _tool_view(assistant: AssistantConfig, msgs: list[dict[str, Any]]) -> list[d
     return head + msgs[last_user:]
 
 
+def _rounds_exhausted(assistant: AssistantConfig, round_index: int) -> bool:
+    """True once the tool backend has used its ``tool_max_rounds`` for this turn."""
+    limit = assistant.tool_max_rounds
+    return limit is not None and round_index >= limit
+
+
 async def _decide(
     assistant: AssistantConfig,
     tool_backend: Backend,
@@ -169,7 +175,7 @@ async def run(
     for i in range(assistant.max_tool_iterations + 1):
         # On the final permitted iteration, drop tools to force a natural answer.
         allow_tools = tools if i < assistant.max_tool_iterations else None
-        if tool_backend is not None and allow_tools:
+        if tool_backend is not None and allow_tools and not _rounds_exhausted(assistant, i):
             decision, confidence, execute = await _decide(assistant, tool_backend, msgs, allow_tools)
             _accumulate_usage(usage, decision.usage)
             decisions.append(_decision_record(i, decision, confidence, execute))
@@ -180,6 +186,8 @@ async def run(
             # The specialist declined (or was not confident enough): the answer
             # backend replies from whatever the conversation holds, without tools.
             allow_tools = None
+        elif tool_backend is not None:
+            allow_tools = None  # rounds exhausted: the answer backend never sees tools
         last = await backend.complete(assistant.model, msgs, allow_tools, params)
         _accumulate_usage(usage, last.usage)
         if last.tool_calls and allow_tools:
@@ -268,7 +276,7 @@ async def run_stream(
     try:
         for i in range(assistant.max_tool_iterations + 1):
             allow_tools = tools if i < assistant.max_tool_iterations else None
-            if tool_backend is not None and allow_tools:
+            if tool_backend is not None and allow_tools and not _rounds_exhausted(assistant, i):
                 # The decision is a short non-streamed call; only the answer streams.
                 decision, confidence, execute = await _decide(
                     assistant, tool_backend, msgs, allow_tools
@@ -279,6 +287,8 @@ async def run_stream(
                     msgs.extend(await _execute_tool_calls(toolset, decision.tool_calls, assistant.tool_result_max_chars))
                     continue
                 allow_tools = None
+            elif tool_backend is not None:
+                allow_tools = None  # rounds exhausted: the answer backend never sees tools
 
             content_parts: list[str] = []
             tool_acc: dict[int, dict[str, Any]] = {}

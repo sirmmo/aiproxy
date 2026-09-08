@@ -89,6 +89,11 @@ class AssistantConfig(BaseModel):
     tool_model: Optional[str] = None
     tool_confidence: float = Field(default=0.5, ge=0.0, le=1.0)
     tool_context: Literal["turn", "full"] = "turn"
+    # How many tool rounds the tool backend may run per turn before the answer
+    # backend replies. ``None`` allows ``max_tool_iterations``. Specialists that
+    # cannot read long inputs (needle) should decide once: after the first
+    # round they would be shown the tool results and stall or misfire.
+    tool_max_rounds: Optional[int] = Field(default=None, ge=0)
     # Restrict and re-describe the tools this assistant exposes, by exposed name
     # (``<server>__<tool>``). Small tool-calling models degrade with large tool
     # sets and long descriptions; an allow-list of a few tools with one-line

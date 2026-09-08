@@ -100,6 +100,7 @@ assistants:
   #   tool_model: needle-2
   #   tool_confidence: 0.5                 # execute only calls at/above this x_needle.confidence
   #   tool_context: turn                   # what the specialist sees: `turn` or `full`
+  #   tool_max_rounds: 1                   # ask the specialist once per turn
   #   tool_allowlist: [ontorag__answer, ontorag__search_entities]   # small sets suit small models
   #   tool_result_max_chars: 6000          # cap retrieval payloads for a small answer model
   #   tool_arguments:                      # hidden from the model, forced on every call
