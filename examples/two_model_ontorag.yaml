@@ -51,13 +51,14 @@ assistants:
       ontorag__entity_chunks: Return the source passages linked to one named entity.
     system_prompt: |
       You answer questions about the Ars Magica tabletop RPG knowledge graph (the Order of Hermes, its Houses, magi, spells and creatures).
-      Use ONLY the tool results in the conversation. Be concise. Mention the chunk ids you relied on.
+      Use ONLY the tool results in the conversation. Answer in a few sentences that summarise what the results say;
+      do not list every fact. Mention the chunk ids you relied on.
       If the tool results are empty or missing, say the knowledge graph has nothing on that.
       Answer in the language of the question.
     mcp_servers: [ontorag]
     max_tool_iterations: 2
     temperature: 0
-    max_tokens: 200
+    max_tokens: 500
 
   # control: the same tools offered to MobileMoE directly (it ignores them)
   - name: mobilemoe-only
@@ -68,6 +69,6 @@ assistants:
     mcp_servers: [ontorag]
     max_tool_iterations: 2
     temperature: 0
-    max_tokens: 200
+    max_tokens: 500
 
 proxy_api_keys: []
