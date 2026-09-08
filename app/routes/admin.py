@@ -66,6 +66,8 @@ async def put_assistant(name: str, request: Request) -> dict[str, Any]:
     state = _state(request)
     if cfg.backend not in state.config.backends:
         raise HTTPException(status_code=422, detail=f"unknown backend '{cfg.backend}'")
+    if cfg.tool_backend and cfg.tool_backend not in state.config.backends:
+        raise HTTPException(status_code=422, detail=f"unknown tool_backend '{cfg.tool_backend}'")
     unknown = [s for s in cfg.mcp_servers if s not in state.config.mcp_servers]
     if unknown:
         raise HTTPException(status_code=422, detail=f"unknown MCP server(s): {unknown}")

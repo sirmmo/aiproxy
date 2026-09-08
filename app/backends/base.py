@@ -27,6 +27,28 @@ class Completion:
     tool_calls: list[ToolCall] = field(default_factory=list)
     finish_reason: str = "stop"
     usage: dict[str, int] = field(default_factory=dict)
+    # Non-standard top-level fields the upstream returned (``x_needle``,
+    # ``x_mobilemoe``, ...). The agent loop reads a confidence score from here
+    # when the completion came from a tool backend.
+    extras: dict[str, Any] = field(default_factory=dict)
+
+
+def completion_confidence(completion: "Completion") -> Optional[float]:
+    """Confidence an upstream attached to its tool calls, if it reports one.
+
+    Looks for a ``confidence`` number at the top level of ``extras`` or inside
+    any ``x_*`` object (needle-openai puts it in ``x_needle.confidence``).
+    Returns ``None`` when the upstream reports nothing, which the loop treats as
+    "trusted" so ordinary tool-calling LLMs work unchanged as tool backends.
+    """
+    candidates: list[Any] = [completion.extras.get("confidence")]
+    for key, value in completion.extras.items():
+        if key.startswith("x_") and isinstance(value, dict):
+            candidates.append(value.get("confidence"))
+    for value in candidates:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return float(value)
+    return None
 
 
 @dataclass

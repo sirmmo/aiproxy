@@ -38,6 +38,7 @@ async def list_models(request: Request) -> dict[str, Any]:
                 "owned_by": "aiproxy",
                 "description": a.description,
                 "backend": a.backend,
+                "tool_backend": a.tool_backend,
                 "mcp_servers": a.mcp_servers,
             }
             for a in state.assistants.values()
@@ -82,6 +83,7 @@ async def chat_completions(request: Request):
 
     try:
         backend = state.backend_for(assistant)
+        tool_backend = state.tool_backend_for(assistant)
     except KeyError as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
@@ -92,18 +94,24 @@ async def chat_completions(request: Request):
         raise HTTPException(status_code=502, detail=f"MCP server error: {exc}")
 
     toolset = state.mcp.build_toolset(assistant.mcp_servers)
+    if assistant.tool_allowlist is not None or assistant.tool_descriptions or assistant.tool_arguments:
+        toolset.restrict(assistant.tool_allowlist, assistant.tool_descriptions, assistant.tool_arguments)
     params = _extract_params(body, assistant)
     stream = bool(body.get("stream"))
 
     if stream:
         return StreamingResponse(
-            agent.run_stream(assistant, backend, toolset, messages, params),
+            agent.run_stream(
+                assistant, backend, toolset, messages, params, tool_backend=tool_backend
+            ),
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
         )
 
     try:
-        result = await agent.run(assistant, backend, toolset, messages, params)
+        result = await agent.run(
+            assistant, backend, toolset, messages, params, tool_backend=tool_backend
+        )
     except httpx.HTTPStatusError as exc:
         detail = exc.response.text if exc.response is not None else str(exc)
         status = exc.response.status_code if exc.response is not None else 502

@@ -176,6 +176,7 @@ class ToolSet:
         self._manager = manager
         self.tools: list[dict[str, Any]] = []  # OpenAI tool schema
         self._route: dict[str, tuple[str, str]] = {}  # exposed name -> (server, tool)
+        self._pinned: dict[str, dict[str, Any]] = {}  # exposed name -> forced arguments
         for server_name in server_names:
             server = manager.servers.get(server_name)
             if server is None:
@@ -204,6 +205,40 @@ class ToolSet:
         self._route[exposed] = (server_name, tool_name)
         return exposed
 
+    def restrict(
+        self,
+        allowlist: Optional[list[str]] = None,
+        descriptions: Optional[dict[str, str]] = None,
+        pinned: Optional[dict[str, dict[str, Any]]] = None,
+    ) -> None:
+        """Keep only ``allowlist`` (exposed names), rewrite descriptions and hide
+        pinned arguments from the schema, in place.
+
+        Routing is untouched, so a call to a hidden tool still resolves; the
+        model simply is not told about it. Pinned arguments are merged into
+        calls by :meth:`call`.
+        """
+        if allowlist is not None:
+            wanted = set(allowlist)
+            known = {t["function"]["name"] for t in self.tools}
+            for name in wanted - known:
+                logger.warning("tool_allowlist names unknown tool '%s'", name)
+            self.tools = [t for t in self.tools if t["function"]["name"] in wanted]
+        self._pinned = dict(pinned or {})
+        for tool in self.tools:
+            name = tool["function"]["name"]
+            override = (descriptions or {}).get(name)
+            if override is not None:
+                tool["function"]["description"] = override
+            fixed = self._pinned.get(name)
+            if fixed:
+                schema = tool["function"].get("parameters") or {}
+                props = schema.get("properties") or {}
+                for key in fixed:
+                    props.pop(key, None)
+                if "required" in schema:
+                    schema["required"] = [r for r in schema["required"] if r not in fixed]
+
     @property
     def is_empty(self) -> bool:
         return not self.tools
@@ -216,6 +251,9 @@ class ToolSet:
         server = self._manager.servers.get(server_name)
         if server is None:
             return f"[tool error] server '{server_name}' is not registered"
+        fixed = self._pinned.get(exposed_name)
+        if fixed:
+            arguments = {**arguments, **fixed}
         return await server.call(tool_name, arguments)
 
 

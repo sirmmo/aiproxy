@@ -34,7 +34,15 @@ class AppState:
         return self.assistants.get(name)
 
     def backend_for(self, assistant: AssistantConfig) -> Backend:
-        name = assistant.backend
+        return self._backend(assistant, assistant.backend)
+
+    def tool_backend_for(self, assistant: AssistantConfig) -> Optional[Backend]:
+        """The assistant's tool-deciding backend, or ``None`` for single-model assistants."""
+        if not assistant.tool_backend:
+            return None
+        return self._backend(assistant, assistant.tool_backend)
+
+    def _backend(self, assistant: AssistantConfig, name: str) -> Backend:
         if name not in self.config.backends:
             raise KeyError(f"assistant '{assistant.name}' references unknown backend '{name}'")
         if name not in self._backends:

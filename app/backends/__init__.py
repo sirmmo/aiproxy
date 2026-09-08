@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ..config import BackendConfig
 from .anthropic_backend import AnthropicBackend
-from .base import Backend, Completion, StreamEvent, ToolCall
+from .base import Backend, Completion, StreamEvent, ToolCall, completion_confidence
 from .openai_backend import OpenAIBackend
 
 __all__ = [
@@ -13,6 +13,7 @@ __all__ = [
     "StreamEvent",
     "ToolCall",
     "build_backend",
+    "completion_confidence",
 ]
 
 

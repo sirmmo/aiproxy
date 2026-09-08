@@ -76,6 +76,35 @@ class AssistantConfig(BaseModel):
     system_prompt: Optional[str] = None
     mcp_servers: list[str] = Field(default_factory=list)
     max_tool_iterations: int = 8
+    # Two-model assistants. When ``tool_backend`` is set, every round first asks
+    # that backend (a tool-calling specialist such as needle-openai) whether to
+    # call a tool. Its calls are executed only when the confidence it reports
+    # (``x_needle.confidence`` or a top-level ``confidence``) is at least
+    # ``tool_confidence``; a backend that reports no confidence is trusted.
+    # Otherwise ``backend`` answers without tools. ``tool_model`` defaults to
+    # ``model``. ``tool_context`` is what the tool backend sees: ``turn`` (system
+    # prompt + everything from the last user message on, the safe choice for
+    # specialists that truncate long inputs silently) or ``full``.
+    tool_backend: Optional[str] = None
+    tool_model: Optional[str] = None
+    tool_confidence: float = Field(default=0.5, ge=0.0, le=1.0)
+    tool_context: Literal["turn", "full"] = "turn"
+    # Restrict and re-describe the tools this assistant exposes, by exposed name
+    # (``<server>__<tool>``). Small tool-calling models degrade with large tool
+    # sets and long descriptions; an allow-list of a few tools with one-line
+    # descriptions written for the deciding model is the fix. ``None`` exposes
+    # every tool of the attached servers.
+    tool_allowlist: Optional[list[str]] = None
+    tool_descriptions: dict[str, str] = Field(default_factory=dict)
+    # Truncate each tool result to this many characters before it enters the
+    # conversation. Retrieval tools can return thousands of tokens; a small
+    # answer model with an 8k window (and slow CPU prefill) needs a cap.
+    tool_result_max_chars: Optional[int] = Field(default=None, ge=1)
+    # Arguments pinned per exposed tool name: hidden from the schema the model
+    # sees and merged into every call (the model's value, if any, is replaced).
+    # For parameters a small tool-calling model should not choose (page sizes,
+    # dataset ids, expansion depth).
+    tool_arguments: dict[str, dict[str, Any]] = Field(default_factory=dict)
     # Default sampling params; client-supplied values override these per request.
     temperature: Optional[float] = None
     top_p: Optional[float] = None

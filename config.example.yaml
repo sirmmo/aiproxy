@@ -8,6 +8,10 @@
 
 # Reusable MCP servers. Each is either a stdio subprocess or an sse/http URL.
 mcp_servers:
+  # An OntoRAG knowledge-graph dataset served over streamable-http (ontorag-mcp).
+  # ontorag:
+  #   transport: streamable-http
+  #   url: http://host.docker.internal:8765/mcp
   # A local demo server shipped with this repo (no network needed).
   echo:
     transport: stdio
@@ -38,6 +42,14 @@ mcp_servers:
 
 # Upstream LLM providers.
 backends:
+  # Local OpenAI-compatible servers for the two-model example above.
+  # needle:
+  #   kind: openai
+  #   base_url: http://host.docker.internal:8002/v1
+  # mobilemoe:
+  #   kind: openai
+  #   base_url: http://host.docker.internal:8003/v1
+  #   timeout: 900                         # CPU inference is slow
   openai:
     kind: openai
     base_url: https://api.openai.com/v1
@@ -75,6 +87,30 @@ assistants:
     system_prompt: Use the tools to compute answers precisely.
     mcp_servers: [echo]
     max_tool_iterations: 4
+
+  # Two-model assistant: a tool-calling specialist decides which tools to call,
+  # a chat model writes the answer. Pairs e.g. needle-openai (45M parameters,
+  # tool calls only, reports a calibrated confidence) with a small on-device
+  # chat model that cannot call tools at all (openai-MobileMoE).
+  # Requires the `needle` and `mobilemoe` backends below.
+  # - name: ontorag-chat
+  #   backend: mobilemoe                   # writes the answer, never sees tools
+  #   model: MobileMoE-S-QAT
+  #   tool_backend: needle                 # decides tool calls
+  #   tool_model: needle-2
+  #   tool_confidence: 0.5                 # execute only calls at/above this x_needle.confidence
+  #   tool_context: turn                   # what the specialist sees: `turn` or `full`
+  #   tool_allowlist: [ontorag__answer, ontorag__search_entities]   # small sets suit small models
+  #   tool_result_max_chars: 6000          # cap retrieval payloads for a small answer model
+  #   tool_arguments:                      # hidden from the model, forced on every call
+  #     ontorag__answer: {k: 3, expand: 1}
+  #   tool_descriptions:                   # one-liners written for the deciding model
+  #     ontorag__answer: Retrieve passages and facts for any question about the game world.
+  #     ontorag__search_entities: Find factions, characters, species or places by name.
+  #   system_prompt: Answer only from the tool results. Cite the chunk ids you used.
+  #   mcp_servers: [ontorag]
+  #   max_tool_iterations: 3
+  #   temperature: 0
 
 # If non-empty, clients must send `Authorization: Bearer <key>` to /v1/*.
 proxy_api_keys:

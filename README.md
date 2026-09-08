@@ -41,6 +41,7 @@ MCP gives you a growing ecosystem of tool servers (web fetch, filesystem, databa
 - **Wraps any LLM** — OpenAI-compatible backends (OpenAI, Groq, Together, Mistral, vLLM, Ollama, LM Studio, OpenRouter…) **and** native Anthropic (Messages API), behind one interface.
 - **Reusable MCP fabric** — attach any number of MCP servers (`stdio`, `sse`, `streamable-http`) to each assistant. Tools are namespaced per server and executed transparently.
 - **Assistants as virtual models** — each `model` a client can pick is a backend + system prompt + set of MCP servers + tool-loop budget.
+- **Two-model assistants** — optionally split the job: a tool-calling specialist (`tool_backend`, e.g. [needle-openai](https://github.com/sirmmo/needle-openai)) decides which tools to call, gated on the confidence it reports, and a chat model that cannot call tools at all (e.g. [openai-MobileMoE](https://github.com/sirmmo/openai-MobileMoE)) writes the answer.
 - **Runtime admin API** — add/edit/remove assistants, backends and MCP servers without a restart; introspect any server's tools.
 - **Pluggable auth** — static API keys and [Apiman](https://www.apiman.io) key validation (gateway round-trip or trusted-header topologies) run in parallel.
 - **Docker-first** — `docker compose up` and you have an endpoint. Node (`npx`) and `uvx` are baked in so most MCP servers install on demand.
@@ -121,6 +122,31 @@ assistants:
 ```
 
 See [`config.example.yaml`](config.example.yaml) for the fully annotated version, including `sse`/`http` MCP servers, local model backends, and API-key auth.
+
+### Two-model assistants
+
+Small on-device models are often good at *either* picking a function *or* writing prose, rarely both. An assistant can name a second backend that only decides tool calls:
+
+```yaml
+assistants:
+  - name: ontorag-chat
+    backend: mobilemoe            # writes the answer; never sees the tools
+    model: MobileMoE-S-QAT
+    tool_backend: needle          # decides tool calls
+    tool_model: needle-2
+    tool_confidence: 0.5          # run a call only at/above this reported confidence
+    tool_context: turn            # `turn` (system prompt + current turn) or `full`
+    tool_allowlist: [ontorag__answer, ontorag__search_entities]
+    tool_result_max_chars: 6000   # cap retrieval payloads for a small answer model
+    tool_arguments:               # hidden from the model, forced on every call
+      ontorag__answer: {k: 3, expand: 1}
+    tool_descriptions:
+      ontorag__answer: Retrieve passages and facts for any question about the game world.
+      ontorag__search_entities: Find factions, characters, species or places by name.
+    mcp_servers: [ontorag]
+```
+
+Each round the gateway asks `tool_backend` first. If it returns tool calls whose confidence (`x_needle.confidence`, or a top-level `confidence`; backends that report none are trusted) clears `tool_confidence`, the calls run against the MCP servers and the round repeats. Otherwise `backend` answers from the conversation, tools withheld. Responses carry an `x_aiproxy.decisions` list showing every round's calls, confidence and whether they ran. `tool_context: turn` keeps specialists that truncate long inputs honest by showing them only the system prompt and the current turn. `tool_allowlist`, `tool_descriptions`, `tool_arguments` and `tool_result_max_chars` (usable on any assistant) trim what the models are told about and asked to decide: small tool-calling models degrade with large tool sets and long descriptions written for bigger models, should not be choosing page sizes or dataset ids, and a small answer model cannot absorb thousands of tokens of retrieval payload.
 
 ### Backends
 

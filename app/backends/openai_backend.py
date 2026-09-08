@@ -89,6 +89,9 @@ class OpenAIBackend:
             tool_calls=tool_calls,
             finish_reason=data["choices"][0].get("finish_reason") or "stop",
             usage=data.get("usage") or {},
+            extras={
+                k: v for k, v in data.items() if k == "confidence" or str(k).startswith("x_")
+            },
         )
 
     async def stream(
