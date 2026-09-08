@@ -95,7 +95,7 @@ assistants:
   # Requires the `needle` and `mobilemoe` backends below.
   # - name: ontorag-chat
   #   backend: mobilemoe                   # writes the answer, never sees tools
-  #   model: MobileMoE-S-QAT
+  #   model: MobileMoE-M-QAT
   #   tool_backend: needle                 # decides tool calls
   #   tool_model: needle-2
   #   tool_confidence: 0.5                 # execute only calls at/above this x_needle.confidence

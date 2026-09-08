@@ -132,7 +132,7 @@ Small on-device models are often good at *either* picking a function *or* writin
 assistants:
   - name: ontorag-chat
     backend: mobilemoe            # writes the answer; never sees the tools
-    model: MobileMoE-S-QAT
+    model: MobileMoE-M-QAT
     tool_backend: needle          # decides tool calls
     tool_model: needle-2
     tool_confidence: 0.5          # run a call only at/above this reported confidence

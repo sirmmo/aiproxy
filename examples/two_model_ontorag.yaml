@@ -1,10 +1,11 @@
 # Two-model assistant, as tested on 2026-09-08: needle-openai decides which
-# OntoRAG tool to call, MobileMoE-S-QAT (openai-MobileMoE) writes the answer.
+# OntoRAG tool to call, MobileMoE-M-QAT (openai-MobileMoE) writes the answer.
+# (S-QAT was tried first and answered noticeably worse; M is the sensible floor.)
 #
 # Services, all local Docker containers on the host network:
 #   needle-openai      ghcr.io/sirmmo/needle-openai:latest            -> :8002
 #   openai-MobileMoE   ghcr.io/sirmmo/openai-mobilemoe:latest         -> :8003
-#                      (MOBILEMOE_MODEL=facebook/MobileMoE-S-QAT, HF_TOKEN set,
+#                      (MOBILEMOE_MODEL=facebook/MobileMoE-M-QAT, HF_TOKEN set,
 #                       MOBILEMOE_DEFAULT_REPETITION_PENALTY=1.15)
 #   ontorag-mcp        built from github.com/sirmmo/ontorag-mcp        -> :8765/mcp
 #                      (ONTORAG_RETRIEVAL=ontology, a dataset in the amol layout)
@@ -23,16 +24,16 @@ backends:
     kind: openai
     base_url: http://127.0.0.1:8002/v1
     timeout: 120
-  mobilemoe-s:
+  mobilemoe-m:
     kind: openai
     base_url: http://127.0.0.1:8003/v1
-    timeout: 900
+    timeout: 1200                 # CPU inference is slow; M decodes ~5 tok/s on an old Xeon
 
 assistants:
   - name: ontorag-chat
-    description: needle-2 picks OntoRAG tools, MobileMoE-S-QAT writes the answer.
-    backend: mobilemoe-s
-    model: MobileMoE-S-QAT
+    description: needle-2 picks OntoRAG tools, MobileMoE-M-QAT writes the answer.
+    backend: mobilemoe-m
+    model: MobileMoE-M-QAT
     tool_backend: needle
     tool_model: needle-2
     tool_confidence: 0.0        # needle scores these retrieval calls near 0; only explicit declines are gated
@@ -61,8 +62,8 @@ assistants:
   # control: the same tools offered to MobileMoE directly (it ignores them)
   - name: mobilemoe-only
     description: MobileMoE-S-QAT with the same tools offered directly (control).
-    backend: mobilemoe-s
-    model: MobileMoE-S-QAT
+    backend: mobilemoe-m
+    model: MobileMoE-M-QAT
     system_prompt: You answer questions about the Ars Magica tabletop RPG knowledge graph.
     mcp_servers: [ontorag]
     max_tool_iterations: 2
