@@ -11,6 +11,7 @@ services:
       PROXY_API_KEY: ${PROXY_API_KEY:-}
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
       CONFIG_PATH: /app/config.yaml
     volumes:
       # Your live config (copy config.example.yaml -> config.yaml first).

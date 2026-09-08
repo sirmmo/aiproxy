@@ -44,6 +44,7 @@ MCP gives you a growing ecosystem of tool servers (web fetch, filesystem, databa
 - **Two-model assistants** — optionally split the job: a tool-calling specialist (`tool_backend`, e.g. [needle-openai](https://github.com/sirmmo/needle-openai)) decides which tools to call, gated on the confidence it reports, and a chat model that cannot call tools at all (e.g. [openai-MobileMoE](https://github.com/sirmmo/openai-MobileMoE)) writes the answer.
 - **Runtime admin API** — add/edit/remove assistants, backends and MCP servers without a restart; introspect any server's tools.
 - **Pluggable auth** — static API keys and [Apiman](https://www.apiman.io) key validation (gateway round-trip or trusted-header topologies) run in parallel.
+- **Browser clients welcome** — CORS is on by default (`CORS_ORIGINS`), so in-browser clients such as Hollama can talk to `/v1` directly.
 - **Docker-first** — `docker compose up` and you have an endpoint. Node (`npx`) and `uvx` are baked in so most MCP servers install on demand.
 
 ## Quick start (Docker)

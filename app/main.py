@@ -10,6 +10,7 @@ import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .routes import admin, chat
@@ -45,6 +46,20 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+
+# Browser clients (Hollama, Open WebUI's direct connections, LibreChat, ...) send
+# a CORS preflight before every call; without this middleware they get 405 on
+# OPTIONS and never reach the API. Comma-separated origins, `*` for any.
+# Read from the environment because the middleware must exist before the
+# config-loading lifespan runs.
+_cors_origins = [o.strip() for o in os.environ.get("CORS_ORIGINS", "*").split(",") if o.strip()]
+if _cors_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.include_router(chat.router)
 app.include_router(admin.router)
