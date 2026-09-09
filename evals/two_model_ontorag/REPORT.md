@@ -156,8 +156,8 @@ evaluation host._
 
 ### Addendum: 14000-character cap control
 
-The same first ten English  questions, re-run through a copy of
- with  (added at runtime through
+The same first ten English `entity_named` questions, re-run through a copy of
+`ontorag-chat` with `tool_result_max_chars: 14000` (added at runtime through
 the admin API, everything else identical):
 
 | | 5000-char cap | 14000-char cap |
@@ -168,16 +168,16 @@ the admin API, everything else identical):
 | Chunk ids cited in the answer | 0 | 0 |
 | Mean answer length (tokens) | 218 | 153 |
 
-With the wider cap every  call delivered its passages and half the
-questions retrieved a gold chunk, against two before, which confirms the clip
-as the cause.  results carry no chunk ids in either setting,
-so the ceiling for this metric is the share of turns needle routes to 
-(about two thirds). The answers were also shorter and read as direct summaries.
-Even with the passages present the model never quoted a chunk id, so "mention
-the chunk ids" is a request this model size does not honour; citations should
-be attached by the gateway from the  fields, not by the model. Timings
-are not comparable: the 5000-cap run of these questions overlapped with an
-image build on the same CPU.
+With the wider cap five of the seven `answer` calls delivered their passages
+and every one of those retrieved a gold chunk, against two before, which
+confirms the clip as the cause. `search_entities` results carry no chunk ids
+in either setting, so the ceiling for this metric is the share of turns needle
+routes to `answer` (about two thirds). The answers were also shorter and read
+as direct summaries. Even with the passages present the model never quoted a
+chunk id, so "mention the chunk ids" is a request this model size does not
+honour; citations should be attached by the gateway from the `cite` fields,
+not by the model. Timings are not comparable: the 5000-cap run of these
+questions overlapped with an image build on the same CPU.
 
 ## Caveats
 
