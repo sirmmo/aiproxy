@@ -76,9 +76,9 @@ contained in the normalised answer.
 
 ### Judge-free metrics (RAG set)
 
- = a gold chunk id among the retrieved passages;  = the
-asked entity appears in the retrieved text;  = it appears in the
-answer;  = the answer says the graph has nothing;  = answers that
+`ret-hit` = a gold chunk id among the retrieved passages; `ent-in-ctx` = the
+asked entity appears in the retrieved text; `ent-in-ans` = it appears in the
+answer; `rejects` = the answer says the graph has nothing; `cap` = answers that
 hit the 1000-token limit.
 
 | Assistant | Kind / lang | n | ret-hit | ent-in-ctx | ent-in-ans | rejects | cap | mean s | tokens |
@@ -94,32 +94,32 @@ hit the 1000-token limit.
 | mobilemoe-only (S, no retrieval) | paraphrase / en | 10 | – | – | 0.10 | 0.00 | 0.00 | 19 | 206 |
 | mobilemoe-only (S, no retrieval) | unanswerable / en | 10 | – | – | – | 0.00 | 0.00 | 6 | 66 |
 
-Tool choice by needle over the 80 M-assistant turns:  57 times,
- 28,  never; the fallback fired on 10 turns
+Tool choice by needle over the 80 M-assistant turns: `answer` 57 times,
+`search_entities` 28, `entity_chunks` never; the fallback fired on 10 turns
 (needle declined), 4 turns carried two calls. The S assistant saw the same
 decisions, as expected, since needle decides.
 
 ### The clipping finding
 
- is near zero not because retrieval misses but because the passages
-never reach the model. The  tool returns , ,
- and only then  (each with a  chunk id), and
-the 5000-character  clip falls inside 
+`ret-hit` is near zero not because retrieval misses but because the passages
+never reach the model. The `answer` tool returns `query`, `matched_entities`,
+`ontology_facts` and only then `passages` (each with a `cite` chunk id), and
+the 5000-character `tool_result_max_chars` clip falls inside `ontology_facts`
 for most results: only 7 of the 70 answerable M records and 6 of 50 S records
 contained a single chunk id. What the answer model actually reads is the entity
-cards ( 0.95), which is why the answers are grounded summaries of
+cards (`ent-in-ctx` 0.95), which is why the answers are grounded summaries of
 entity descriptions rather than citations of source text, and why "mention the
 chunk ids you relied on" in the system prompt is never satisfied.
 
-Two fixes, either sufficient: raise  (a 10-question
-control with 14000 is reported in the addendum), or have 's
- put  first and keep  short.
+Two fixes, either sufficient: raise `tool_result_max_chars` (a 10-question
+control with 14000 is reported in the addendum), or have `ontorag-mcp`'s
+`answer` put `passages` first and keep `ontology_facts` short.
 
 ### What the judge-free numbers say
 
 - **Retrieval brings back the right entity** 95% of the time in English and
-  80% in Italian; needle copies the entity name into  or
-   reliably, even from Italian questions.
+  80% in Italian; needle copies the entity name into `search_entities` or
+  `answer` reliably, even from Italian questions.
 - **M beats S on answer discipline**: S echoes or rejects on 20% of named
   questions it had context for, hits the token cap on 17%, and writes 60%
   longer answers; M rejects 5% and never hits the cap.
@@ -151,7 +151,7 @@ multi-hop questions are largely out of reach for either.
 ### LLM-judged metrics (RAGAS, TruLens, ARES-style)
 
 _Pending: the scorers are ready and smoke-tested but need a judge model key
-(, , ). No key was available on the
+(`JUDGE_BASE_URL`, `JUDGE_API_KEY`, `JUDGE_MODEL`). No key was available on the
 evaluation host._
 
 ### Addendum: 14000-character cap control
