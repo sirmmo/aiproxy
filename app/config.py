@@ -110,6 +110,10 @@ class AssistantConfig(BaseModel):
     # declines (needle scores retrieval calls low) would otherwise leave the
     # answer model to invent one. Only used with ``tool_backend``.
     tool_fallback: Optional[ToolFallbackConfig] = None
+    # Include each executed tool's (clipped) result text in x_aiproxy.decisions,
+    # for evaluation harnesses that need the retrieved context alongside the
+    # answer. Off by default: results can be thousands of characters.
+    expose_tool_results: bool = False
     # Restrict and re-describe the tools this assistant exposes, by exposed name
     # (``<server>__<tool>``). Small tool-calling models degrade with large tool
     # sets and long descriptions; an allow-list of a few tools with one-line

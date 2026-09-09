@@ -269,6 +269,13 @@ async def main() -> None:
     assert d["executed"] is False and d["fallback"] == [{"name": "echo__uppercase", "arguments": '{"text": "shout"}'}], d
     print("  fallback ran echo__uppercase('shout'), talker answered from it")
 
+    print("→ expose_tool_results puts the retrieved text on the decision record...")
+    exposed = TWO_MODEL.model_copy(update={"expose_tool_results": True})
+    decider, talker = FakeDecider([0.9, None]), FakeTalker()
+    resp = await agent.run(exposed, talker, toolset, [{"role": "user", "content": "add 2 and 3"}], {}, tool_backend=decider)
+    assert resp["x_aiproxy"]["decisions"][0]["results"] == ["5.0"], resp["x_aiproxy"]
+    print("  results attached")
+
     print("→ two-model assistant: low confidence skips the tool...")
     decider, talker = FakeDecider([0.2]), FakeTalker()
     resp = await agent.run(TWO_MODEL, talker, toolset, [{"role": "user", "content": "hi"}], {}, tool_backend=decider)

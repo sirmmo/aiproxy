@@ -216,11 +216,12 @@ async def run(
             decisions.append(_decision_record(i, decision, confidence, execute, fallback))
             if calls or fallback:
                 msgs.append(_assistant_message(None, calls or fallback))
-                msgs.extend(
-                    await _execute_tool_calls(
-                        toolset, calls or fallback, assistant.tool_result_max_chars
-                    )
+                results = await _execute_tool_calls(
+                    toolset, calls or fallback, assistant.tool_result_max_chars
                 )
+                msgs.extend(results)
+                if assistant.expose_tool_results:
+                    decisions[-1]["results"] = [r["content"] for r in results]
                 continue
             # The specialist declined (or was not confident enough) and there is
             # no fallback: the answer backend replies from whatever the
@@ -326,11 +327,12 @@ async def run_stream(
                 decisions.append(_decision_record(i, decision, confidence, execute, fallback))
                 if calls or fallback:
                     msgs.append(_assistant_message(None, calls or fallback))
-                    msgs.extend(
-                        await _execute_tool_calls(
-                            toolset, calls or fallback, assistant.tool_result_max_chars
-                        )
+                    results = await _execute_tool_calls(
+                        toolset, calls or fallback, assistant.tool_result_max_chars
                     )
+                    msgs.extend(results)
+                    if assistant.expose_tool_results:
+                        decisions[-1]["results"] = [r["content"] for r in results]
                     continue
                 allow_tools = None
             elif tool_backend is not None:
