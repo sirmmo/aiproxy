@@ -253,6 +253,22 @@ async def main() -> None:
     assert len(decider.seen) == 1 and len(resp["x_aiproxy"]["decisions"]) == 1
     print("  one decision, tool ran, talker answered")
 
+    print("→ tool_fallback: a declined first decision still runs the configured call...")
+    from app.config import ToolFallbackConfig
+
+    fb = TWO_MODEL.model_copy(
+        update={
+            "tool_max_rounds": 1,
+            "tool_fallback": ToolFallbackConfig(tool="echo__uppercase", arguments={"text": "{user}"}),
+        }
+    )
+    decider, talker = FakeDecider([None]), FakeTalker()
+    resp = await agent.run(fb, talker, toolset, [{"role": "user", "content": "shout"}], {}, tool_backend=decider)
+    assert resp["choices"][0]["message"]["content"] == "Result: SHOUT", resp
+    d = resp["x_aiproxy"]["decisions"][0]
+    assert d["executed"] is False and d["fallback"] == [{"name": "echo__uppercase", "arguments": '{"text": "shout"}'}], d
+    print("  fallback ran echo__uppercase('shout'), talker answered from it")
+
     print("→ two-model assistant: low confidence skips the tool...")
     decider, talker = FakeDecider([0.2]), FakeTalker()
     resp = await agent.run(TWO_MODEL, talker, toolset, [{"role": "user", "content": "hi"}], {}, tool_backend=decider)

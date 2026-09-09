@@ -39,6 +39,9 @@ assistants:
     tool_confidence: 0.0        # needle scores these retrieval calls near 0; only explicit declines are gated
     tool_context: turn
     tool_max_rounds: 1
+    tool_fallback:
+      tool: ontorag__answer
+      arguments: {query: "{user}"}
     tool_allowlist: [ontorag__answer, ontorag__search_entities, ontorag__entity_chunks]
     tool_result_max_chars: 5000
     tool_arguments:

@@ -145,14 +145,47 @@ async def _decide(
 
 
 def _decision_record(
-    round_index: int, decision: Completion, confidence: Optional[float], executed: bool
+    round_index: int,
+    decision: Completion,
+    confidence: Optional[float],
+    executed: bool,
+    fallback: Optional[list[ToolCall]] = None,
 ) -> dict[str, Any]:
-    return {
+    record = {
         "round": round_index,
         "tool_calls": [{"name": tc.name, "arguments": tc.arguments} for tc in decision.tool_calls],
         "confidence": confidence,
         "executed": executed,
     }
+    if fallback:
+        record["fallback"] = [{"name": tc.name, "arguments": tc.arguments} for tc in fallback]
+    return record
+
+
+def _last_user_text(msgs: list[dict[str, Any]]) -> str:
+    for m in reversed(msgs):
+        if m.get("role") != "user":
+            continue
+        content = m.get("content")
+        if isinstance(content, list):
+            return "".join(
+                part.get("text", "") for part in content if isinstance(part, dict)
+            )
+        return str(content or "")
+    return ""
+
+
+def _fallback_calls(assistant: AssistantConfig, msgs: list[dict[str, Any]]) -> list[ToolCall]:
+    """The forced call for a turn whose first decision ran nothing, or ``[]``."""
+    fb = assistant.tool_fallback
+    if fb is None:
+        return []
+    user = _last_user_text(msgs)
+    args = {
+        k: v.replace("{user}", user) if isinstance(v, str) else v for k, v in fb.arguments.items()
+    }
+    logger.info("tool fallback %s args=%s", fb.tool, args)
+    return [ToolCall(id="call_fallback", name=fb.tool, arguments=json.dumps(args))]
 
 
 # --------------------------------------------------------------------------- #
@@ -178,13 +211,20 @@ async def run(
         if tool_backend is not None and allow_tools and not _rounds_exhausted(assistant, i):
             decision, confidence, execute = await _decide(assistant, tool_backend, msgs, allow_tools)
             _accumulate_usage(usage, decision.usage)
-            decisions.append(_decision_record(i, decision, confidence, execute))
-            if execute:
-                msgs.append(_assistant_message(None, decision.tool_calls))
-                msgs.extend(await _execute_tool_calls(toolset, decision.tool_calls, assistant.tool_result_max_chars))
+            calls = decision.tool_calls if execute else []
+            fallback = _fallback_calls(assistant, msgs) if not execute and i == 0 else []
+            decisions.append(_decision_record(i, decision, confidence, execute, fallback))
+            if calls or fallback:
+                msgs.append(_assistant_message(None, calls or fallback))
+                msgs.extend(
+                    await _execute_tool_calls(
+                        toolset, calls or fallback, assistant.tool_result_max_chars
+                    )
+                )
                 continue
-            # The specialist declined (or was not confident enough): the answer
-            # backend replies from whatever the conversation holds, without tools.
+            # The specialist declined (or was not confident enough) and there is
+            # no fallback: the answer backend replies from whatever the
+            # conversation holds, without tools.
             allow_tools = None
         elif tool_backend is not None:
             allow_tools = None  # rounds exhausted: the answer backend never sees tools
@@ -281,10 +321,16 @@ async def run_stream(
                 decision, confidence, execute = await _decide(
                     assistant, tool_backend, msgs, allow_tools
                 )
-                decisions.append(_decision_record(i, decision, confidence, execute))
-                if execute:
-                    msgs.append(_assistant_message(None, decision.tool_calls))
-                    msgs.extend(await _execute_tool_calls(toolset, decision.tool_calls, assistant.tool_result_max_chars))
+                calls = decision.tool_calls if execute else []
+                fallback = _fallback_calls(assistant, msgs) if not execute and i == 0 else []
+                decisions.append(_decision_record(i, decision, confidence, execute, fallback))
+                if calls or fallback:
+                    msgs.append(_assistant_message(None, calls or fallback))
+                    msgs.extend(
+                        await _execute_tool_calls(
+                            toolset, calls or fallback, assistant.tool_result_max_chars
+                        )
+                    )
                     continue
                 allow_tools = None
             elif tool_backend is not None:

@@ -66,6 +66,18 @@ class BackendConfig(BaseModel):
     timeout: float = 300.0
 
 
+class ToolFallbackConfig(BaseModel):
+    """A tool call the gateway makes itself when the tool backend's first
+    decision of a turn runs nothing (it declined, or was not confident enough).
+
+    ``arguments`` values may contain ``{user}``, replaced by the text of the
+    last user message. Pinned ``tool_arguments`` are merged in as for any call.
+    """
+
+    tool: str
+    arguments: dict[str, Any] = Field(default_factory=dict)
+
+
 class AssistantConfig(BaseModel):
     """A virtual model exposed to clients via the OpenAI ``model`` field."""
 
@@ -94,6 +106,10 @@ class AssistantConfig(BaseModel):
     # cannot read long inputs (needle) should decide once: after the first
     # round they would be shown the tool results and stall or misfire.
     tool_max_rounds: Optional[int] = Field(default=None, ge=0)
+    # Retrieval-style assistants want context on every turn; a specialist that
+    # declines (needle scores retrieval calls low) would otherwise leave the
+    # answer model to invent one. Only used with ``tool_backend``.
+    tool_fallback: Optional[ToolFallbackConfig] = None
     # Restrict and re-describe the tools this assistant exposes, by exposed name
     # (``<server>__<tool>``). Small tool-calling models degrade with large tool
     # sets and long descriptions; an allow-list of a few tools with one-line
