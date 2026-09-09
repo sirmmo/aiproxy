@@ -12,6 +12,7 @@ services:
       ADMIN_API_KEY: ${ADMIN_API_KEY:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
       CORS_ORIGINS: ${CORS_ORIGINS:-*}
+      ANSWER_MAX_TOKENS: ${ANSWER_MAX_TOKENS:-1000}
       CONFIG_PATH: /app/config.yaml
     volumes:
       # Your live config (copy config.example.yaml -> config.yaml first).

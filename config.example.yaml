@@ -112,6 +112,7 @@ assistants:
   #   mcp_servers: [ontorag]
   #   max_tool_iterations: 3
   #   temperature: 0
+  #   max_tokens: ${ANSWER_MAX_TOKENS:-1000}   # env-overridable answer cap
 
 # If non-empty, clients must send `Authorization: Bearer <key>` to /v1/*.
 proxy_api_keys:
