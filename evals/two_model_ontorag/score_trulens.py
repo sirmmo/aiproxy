@@ -16,7 +16,7 @@ provider = TLOpenAI(model_engine=judge.MODEL, base_url=judge.BASE, api_key=judge
 provider._set_capabilities({"responses_api": False, "cfg": False, "structured_outputs": False, "json_mode": False})
 recs = []
 for r in rows:
-    ctxs = r["contexts"][:6]
+    ctxs = r["contexts"][:4]
     try:
         crel = statistics.mean(provider.context_relevance(r["question"], c) for c in ctxs)
         grounded, _ = provider.groundedness_measure_with_cot_reasons("\n\n".join(ctxs), r["answer"] or "")

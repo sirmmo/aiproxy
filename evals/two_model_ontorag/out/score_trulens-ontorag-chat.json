@@ -1,0 +1,759 @@
+{
+ "source": "/work/runs/ontorag-chat.jsonl",
+ "judge": "openai/gpt-4.1-mini",
+ "n": 80,
+ "errors": 0,
+ "aggregate": {
+  "context_relevance": 0.55,
+  "groundedness": 0.601,
+  "answer_relevance": 0.775
+ },
+ "by_kind": {
+  "entity_named/en": {
+   "context_relevance": 0.675,
+   "groundedness": 0.685,
+   "answer_relevance": 0.933,
+   "n": 40
+  },
+  "entity_named/it": {
+   "context_relevance": 0.583,
+   "groundedness": 0.611,
+   "answer_relevance": 0.75,
+   "n": 20
+  },
+  "paraphrase/en": {
+   "context_relevance": 0.533,
+   "groundedness": 0.441,
+   "answer_relevance": 0.667,
+   "n": 10
+  },
+  "unanswerable/en": {
+   "context_relevance": 0.0,
+   "groundedness": 0.408,
+   "answer_relevance": 0.3,
+   "n": 10
+  }
+ },
+ "records": [
+  {
+   "qid": "named-67",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 0.267,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-112",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-34",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.556,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-85",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.556,
+   "answer_relevance": 0.667
+  },
+  {
+   "qid": "named-3",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.5,
+   "answer_relevance": 0.667
+  },
+  {
+   "qid": "named-51",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.5,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-61",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-75",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.583,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-119",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.688,
+   "answer_relevance": 0.333
+  },
+  {
+   "qid": "named-0",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.556,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-1",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.667,
+   "answer_relevance": 0.667
+  },
+  {
+   "qid": "named-57",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 0.833,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-58",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-87",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.333,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-40",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.833,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-16",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-43",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.667,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-14",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-25",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.222,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-107",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-77",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-79",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.667,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-22",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-106",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 0.583,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-48",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-42",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-81",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.75,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-98",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.22,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-110",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.222,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-35",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-100",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 0.444,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-2",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.667,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-59",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-45",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.5,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-114",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.833,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-52",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-10",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-65",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-32",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.917,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-66",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.833,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "para-203",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.778,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "para-180",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.0,
+   "answer_relevance": 0.333
+  },
+  {
+   "qid": "para-163",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.556,
+   "answer_relevance": 0.333
+  },
+  {
+   "qid": "para-228",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "para-131",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 0.444,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "para-157",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.5,
+   "groundedness": 0.833,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "para-222",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.333,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "para-164",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.5,
+   "groundedness": 0.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "para-140",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.905,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "para-200",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.556,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "none-0",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.083,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "none-1",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 1.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "none-2",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "none-3",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "none-4",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 1.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "none-5",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 0.333
+  },
+  {
+   "qid": "none-6",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "none-7",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 1.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "none-8",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 0.667
+  },
+  {
+   "qid": "none-9",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 1.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-113-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.5,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-38-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.5,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-78-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 1.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-84-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.667,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-21-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.889,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-31-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-33-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-56-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-36-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.767,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-116-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-103-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-62-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.5,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-44-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.333,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-99-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.762,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-86-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.917,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-76-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-118-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 0.333,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-95-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-60-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.667,
+   "groundedness": 0.389,
+   "answer_relevance": 0.0
+  },
+  {
+   "qid": "named-91-it",
+   "kind": "entity_named",
+   "lang": "it",
+   "assistant": "ontorag-chat",
+   "context_relevance": 0.0,
+   "groundedness": 0.0,
+   "answer_relevance": 1.0
+  }
+ ]
+}

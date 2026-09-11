@@ -7,7 +7,7 @@ import judge
 judge.require()
 from langchain_openai import ChatOpenAI
 from langchain_community.embeddings import HuggingFaceEmbeddings
-from ragas import EvaluationDataset, evaluate
+from ragas import EvaluationDataset, RunConfig, evaluate
 from ragas.llms import LangchainLLMWrapper
 from ragas.embeddings import LangchainEmbeddingsWrapper
 from ragas.metrics import answer_correctness, answer_relevancy, context_precision, context_recall, faithfulness
@@ -21,9 +21,10 @@ emb = LangchainEmbeddingsWrapper(HuggingFaceEmbeddings(model_name="sentence-tran
 
 def run(subset, metrics, tag):
     if not subset: return {}
-    ds = EvaluationDataset.from_list([{"user_input": r["question"], "retrieved_contexts": r["contexts"][:8], "response": r["answer"] or "",
+    ds = EvaluationDataset.from_list([{"user_input": r["question"], "retrieved_contexts": r["contexts"][:4], "response": r["answer"] or "",
                                        **({"reference": r["reference"]} if r["reference"] else {})} for r in subset])
-    res = evaluate(ds, metrics=metrics, llm=llm, embeddings=emb, raise_exceptions=False, show_progress=False)
+    res = evaluate(ds, metrics=metrics, llm=llm, embeddings=emb, raise_exceptions=False, show_progress=False,
+                   run_config=RunConfig(max_workers=4, timeout=240, max_retries=6, max_wait=60))
     df = res.to_pandas()
     per = df.to_dict(orient="records")
     for r, p in zip(subset, per):

@@ -150,9 +150,96 @@ multi-hop questions are largely out of reach for either.
 
 ### LLM-judged metrics (RAGAS, TruLens, ARES-style)
 
-_Pending: the scorers are ready and smoke-tested but need a judge model key
-(`JUDGE_BASE_URL`, `JUDGE_API_KEY`, `JUDGE_MODEL`). No key was available on the
-evaluation host._
+Judge: `openai/gpt-4.1-mini` through OpenRouter for all three frameworks, so
+cross-assistant comparisons share one judge. About 2,700 judge calls, $1.37 in
+total. Records were scored with at most four retrieved contexts each. The
+closed-book control has no contexts, so only the ARES-style scorer (which
+accepts "no document") reports it; its context and faithfulness rates are zero
+by construction.
+
+#### ARES-style judge (yes/no rates)
+
+| Assistant | Kind / lang | n | context relevance | answer faithfulness | answer relevance |
+| --- | --- | ---: | ---: | ---: | ---: |
+| ontorag-chat (M) | entity_named/en | 40 | 0.50 | 0.15 | 0.35 |
+| ontorag-chat (M) | entity_named/it | 20 | 0.45 | 0.20 | 0.35 |
+| ontorag-chat (M) | paraphrase/en | 10 | 0.50 | 0.10 | 0.20 |
+| ontorag-chat (M) | unanswerable/en | 10 | 0.00 | 0.50 | 0.30 |
+| ontorag-chat-s (S) | entity_named/en | 40 | 0.60 | 0.23 | 0.20 |
+| ontorag-chat-s (S) | paraphrase/en | 10 | 0.50 | 0.30 | 0.30 |
+| ontorag-chat-s (S) | unanswerable/en | 10 | 0.00 | 0.20 | 0.00 |
+| ontorag-chat (M, 14k cap, 10 q) | entity_named/en | 10 | 0.70 | 0.20 | 0.40 |
+| closed-book control (S) | entity_named/en | 40 | 0.00 | 0.00 | 0.00 |
+| closed-book control (S) | paraphrase/en | 10 | 0.00 | 0.00 | 0.10 |
+| closed-book control (S) | unanswerable/en | 10 | 0.00 | 0.00 | 0.50 |
+
+#### TruLens RAG triad (0–1)
+
+| Assistant | Kind / lang | n | context relevance | groundedness | answer relevance |
+| --- | --- | ---: | ---: | ---: | ---: |
+| ontorag-chat (M) | entity_named/en | 40 | 0.68 | 0.69 | 0.93 |
+| ontorag-chat (M) | entity_named/it | 20 | 0.58 | 0.61 | 0.75 |
+| ontorag-chat (M) | paraphrase/en | 10 | 0.53 | 0.44 | 0.67 |
+| ontorag-chat (M) | unanswerable/en | 10 | 0.00 | 0.41 | 0.30 |
+| ontorag-chat-s (S) | entity_named/en | 40 | 0.70 | 0.64 | 0.37 |
+| ontorag-chat-s (S) | paraphrase/en | 10 | 0.53 | 0.50 | 0.27 |
+| ontorag-chat-s (S) | unanswerable/en | 10 | 0.00 | 0.34 | 0.10 |
+| ontorag-chat (M, 14k cap, 10 q) | entity_named/en | 10 | 0.61 | 0.73 | 0.93 |
+
+#### RAGAS (0–1)
+
+| Assistant | Kind / lang | n | faithfulness | answer relevancy | context precision | context recall | answer correctness |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| ontorag-chat (M) | entity_named / en | 40 | 0.46 | 0.68 | 0.85 | 0.65 | 0.41 |
+| ontorag-chat (M) | entity_named / it | 20 | 0.45 | 0.46 | 0.75 | 0.57 | 0.37 |
+| ontorag-chat (M) | paraphrase / en | 10 | 0.40 | 0.41 | – | – | – |
+| ontorag-chat-s (S) | entity_named / en | 40 | 0.38 | 0.21 | 0.85 | 0.68 | 0.18 |
+| ontorag-chat-s (S) | paraphrase / en | 10 | 0.52 | 0.39 | – | – | – |
+| ontorag-chat (M, 14k cap, 10 q) | entity_named / en | 10 | 0.45 | 0.69 | 0.85 | 0.70 | 0.55 |
+
+### What the judged numbers say
+
+- **The frameworks agree on the ranking.** M beats S by a wide margin on
+  whether the answer addresses the question: TruLens answer relevance 0.93
+  against 0.37, RAGAS answer relevancy 0.68 against 0.21, RAGAS answer
+  correctness against the entity summaries 0.41 against 0.18. S's habit of
+  echoing tool JSON or meta-commenting on "the tool response" is what the
+  judges are penalising.
+- **Faithfulness is the shared weakness.** RAGAS faithfulness is 0.46 for M
+  and 0.38 for S, TruLens groundedness 0.69 and 0.64, and ARES's strict yes/no
+  faithfulness only 0.15 and 0.23. Reading the flagged answers shows the
+  pattern: M opens with the entity's real summary and then keeps writing,
+  adding a martyrdom "under Emperor Domitian in AD 270" or "panoramic views"
+  that no retrieved text contains. Claim-level RAGAS gives partial credit for
+  the grounded opening; ARES's binary verdict does not, which is why the scales
+  differ so much for the same answers.
+- **Retrieval quality is not the problem, retrieval delivery is.** RAGAS
+  context precision is 0.85 for both assistants: what arrives is relevant.
+  Context recall is 0.65, capped by the clipped passages and by needle routing
+  a third of turns to `search_entities`. With the 14000-character cap the same
+  ten questions score recall 0.70, answer correctness 0.55 against 0.41,
+  TruLens groundedness 0.73 against 0.69 and ARES context relevance 0.70
+  against 0.50, at no cost in answer relevance.
+- **Italian costs about 20 points of relevance.** For the same kind of
+  question, RAGAS answer relevancy drops from 0.68 to 0.46 and TruLens answer
+  relevance from 0.93 to 0.75, partly because the answers come back in English
+  and are judged against an Italian question; context recall also drops from
+  0.65 to 0.57.
+- **Unanswerable questions expose the fallback's cost.** TruLens groundedness
+  0.41 and ARES faithfulness 0.50 on questions the corpus cannot answer mean
+  half of M's replies wander beyond the (irrelevant) retrieved text instead of
+  saying so, matching the 0.50 rejection rate from the judge-free pass.
+- **ARES's context relevance** (0.50 for M, 0.70 with the wide cap) is the
+  share of records whose document the judge found *sufficient* to answer, a
+  stricter question than TruLens's per-passage relevance (0.68), and it moves
+  the most when the passages survive the clip.
+
+Taken together: with M as the talker, the stack retrieves the right material
+most of the time and answers the question, but grounds only about two thirds
+of what it says and cannot yet say "I don't know" reliably. The two cheapest
+improvements are the wider result cap and a harder instruction against adding
+detail; the structural one is to let the gateway attach citations and to
+detect empty retrievals before the model speaks.
 
 ### Addendum: 14000-character cap control
 

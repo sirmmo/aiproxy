@@ -12,6 +12,8 @@ See [REPORT.md](REPORT.md) for the write-up. Files:
 | `score_basic.py` | Judge-free metrics |
 | `score_ragas.py`, `score_trulens.py`, `score_ares.py` | LLM-judged metrics (need `JUDGE_*`) |
 | `runs/` | Collected records from the reported runs |
+| `out/` | Judged scorer outputs (gpt-4.1-mini via OpenRouter) |
+| `report_judged.py` | Turns `out/*.json` into the report tables |
 
 The Mintaka test split itself (`mintaka_test.json`, 9.6 MB) is fetched from
 https://github.com/amazon-science/mintaka and not committed.

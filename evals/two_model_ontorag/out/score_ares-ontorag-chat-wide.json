@@ -1,0 +1,123 @@
+{
+ "source": "/work/runs/ontorag-chat-wide.jsonl",
+ "judge": "openai/gpt-4.1-mini",
+ "protocol": "ARES UES/IDP judge prompts, no PPI",
+ "n": 10,
+ "errors": 0,
+ "aggregate": {
+  "context_relevance": 0.7,
+  "answer_faithfulness": 0.2,
+  "answer_relevance": 0.4,
+  "n": 10
+ },
+ "by_kind": {
+  "entity_named/en": {
+   "context_relevance": 0.7,
+   "answer_faithfulness": 0.2,
+   "answer_relevance": 0.4,
+   "n": 10
+  }
+ },
+ "records": [
+  {
+   "qid": "named-67",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 1,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "named-112",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 1,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "named-34",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-85",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-3",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-51",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-61",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "named-75",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-119",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-0",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "answerable": true,
+   "context_relevance": 1,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  }
+ ]
+}

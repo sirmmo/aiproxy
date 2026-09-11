@@ -1,0 +1,111 @@
+{
+ "source": "/work/runs/ontorag-chat-wide.jsonl",
+ "judge": "openai/gpt-4.1-mini",
+ "n": 10,
+ "errors": 0,
+ "aggregate": {
+  "context_relevance": 0.608,
+  "groundedness": 0.727,
+  "answer_relevance": 0.933
+ },
+ "by_kind": {
+  "entity_named/en": {
+   "context_relevance": 0.608,
+   "groundedness": 0.727,
+   "answer_relevance": 0.933,
+   "n": 10
+  }
+ },
+ "records": [
+  {
+   "qid": "named-67",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 0.333,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-112",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-34",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 0.5,
+   "groundedness": 0.7,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-85",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 0.25,
+   "groundedness": 0.733,
+   "answer_relevance": 0.667
+  },
+  {
+   "qid": "named-3",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 1.0,
+   "groundedness": 0.667,
+   "answer_relevance": 0.667
+  },
+  {
+   "qid": "named-51",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 0.0,
+   "groundedness": 0.5,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-61",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 1.0,
+   "groundedness": 1.0,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-75",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 0.667,
+   "groundedness": 0.667,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-119",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 0.333,
+   "groundedness": 0.222,
+   "answer_relevance": 1.0
+  },
+  {
+   "qid": "named-0",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "ontorag-chat-wide",
+   "context_relevance": 1.0,
+   "groundedness": 0.778,
+   "answer_relevance": 1.0
+  }
+ ]
+}

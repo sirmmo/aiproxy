@@ -36,7 +36,7 @@ def yes(text: str) -> int:
 
 recs = []
 for r in rows:
-    doc = "\n\n".join(r["contexts"][:6]) if r["contexts"] else "(no document retrieved)"
+    doc = "\n\n".join(r["contexts"][:4]) if r["contexts"] else "(no document retrieved)"
     try:
         cr = yes(judge.ask(cl, CR.format(q=r["question"], d=doc), 10))
         af = yes(judge.ask(cl, AF.format(q=r["question"], d=doc, a=r["answer"] or ""), 10))

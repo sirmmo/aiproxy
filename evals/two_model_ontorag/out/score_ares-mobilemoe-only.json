@@ -1,0 +1,635 @@
+{
+ "source": "/work/runs/mobilemoe-only.jsonl",
+ "judge": "openai/gpt-4.1-mini",
+ "protocol": "ARES UES/IDP judge prompts, no PPI",
+ "n": 60,
+ "errors": 0,
+ "aggregate": {
+  "context_relevance": 0,
+  "answer_faithfulness": 0,
+  "answer_relevance": 0.1,
+  "n": 60
+ },
+ "by_kind": {
+  "entity_named/en": {
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0,
+   "n": 40
+  },
+  "paraphrase/en": {
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0.1,
+   "n": 10
+  },
+  "unanswerable/en": {
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0.5,
+   "n": 10
+  }
+ },
+ "records": [
+  {
+   "qid": "named-67",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-112",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-34",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-85",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-3",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-51",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-61",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-75",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-119",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-0",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-1",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-57",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-58",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-87",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-40",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-16",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-43",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-14",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-25",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-107",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-77",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-79",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-22",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-106",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-48",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-42",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-81",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-98",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-110",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-35",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-100",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-2",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-59",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-45",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-114",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-52",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-10",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-65",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-32",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "named-66",
+   "kind": "entity_named",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-203",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-180",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-163",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "para-228",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-131",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-157",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-222",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-164",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-140",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "para-200",
+   "kind": "paraphrase",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": true,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "none-0",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "none-1",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "none-2",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "none-3",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "none-4",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "none-5",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "none-6",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "none-7",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 0
+  },
+  {
+   "qid": "none-8",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  },
+  {
+   "qid": "none-9",
+   "kind": "unanswerable",
+   "lang": "en",
+   "assistant": "mobilemoe-only",
+   "answerable": false,
+   "context_relevance": 0,
+   "answer_faithfulness": 0,
+   "answer_relevance": 1
+  }
+ ]
+}
