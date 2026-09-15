@@ -276,6 +276,33 @@ async def main() -> None:
     assert resp["x_aiproxy"]["decisions"][0]["results"] == ["5.0"], resp["x_aiproxy"]
     print("  results attached")
 
+    print("→ tool_citations appends ids found in tool results; tool_empty short-circuits...")
+    from app.config import ToolCitationsConfig, ToolEmptyConfig
+
+    cited = TWO_MODEL.model_copy(update={"tool_citations": ToolCitationsConfig(pattern=r"\d+\.\d", label="Sources")})
+    decider, talker = FakeDecider([0.9, None]), FakeTalker()
+    resp = await agent.run(cited, talker, toolset, [{"role": "user", "content": "add 2 and 3"}], {}, tool_backend=decider)
+    assert resp["choices"][0]["message"]["content"] == "Result: 5.0\n\nSources: 5.0", resp
+    assert resp["x_aiproxy"]["citations"] == ["5.0"]
+    lines = []
+    async for line in agent.run_stream(cited, FakeTalker(), toolset, [{"role": "user", "content": "add 2 and 3"}], {}, tool_backend=FakeDecider([0.9, None])):
+        lines.append(line)
+    streamed = "".join(json.loads(l[5:].strip())["choices"][0]["delta"].get("content", "") for l in "".join(lines).splitlines() if l.startswith("data:") and "[DONE]" not in l)
+    assert streamed.replace(" \n", "\n").strip() == "Result: 5.0\n\nSources: 5.0", repr(streamed)  # talker streams a trailing space
+    refusing = TWO_MODEL.model_copy(update={"tool_citations": ToolCitationsConfig(pattern=r"\d+\.\d", skip_pattern=r"no tool was used")})
+    resp = await agent.run(refusing, FakeTalker(), toolset, [{"role": "user", "content": "hi"}], {}, tool_backend=FakeDecider([0.2]))
+    assert resp["choices"][0]["message"]["content"] == "No tool was used." and "citations" not in resp["x_aiproxy"], resp
+    empty = TWO_MODEL.model_copy(update={"tool_empty": ToolEmptyConfig(pattern=r"^\s*$|^UPPER$", reply="Nothing found.")})
+    # echo__uppercase('x') returns 'X'; use a decider that calls it with text that uppercases to the empty pattern
+    class EmptyDecider(FakeDecider):
+        async def complete(self, model, messages, tools, params):
+            return Completion(content=None, tool_calls=[ToolCall(id="e1", name="echo__uppercase", arguments='{"text": "upper"}')], finish_reason="tool_calls", extras={"x_needle": {"confidence": 0.9}})
+    talker = FakeTalker()
+    resp = await agent.run(empty, talker, toolset, [{"role": "user", "content": "x"}], {}, tool_backend=EmptyDecider([]))
+    assert resp["choices"][0]["message"]["content"] == "Nothing found." and resp["x_aiproxy"]["empty_retrieval"] is True, resp
+    assert talker.calls == 0, "answer model must not be called on an empty retrieval"
+    print("  citations appended (sync + stream), empty retrieval short-circuited")
+
     print("→ two-model assistant: low confidence skips the tool...")
     decider, talker = FakeDecider([0.2]), FakeTalker()
     resp = await agent.run(TWO_MODEL, talker, toolset, [{"role": "user", "content": "hi"}], {}, tool_backend=decider)

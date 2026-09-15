@@ -141,6 +141,13 @@ assistants:
     tool_fallback:                # if it declines, retrieve anyway
       tool: ontorag__answer
       arguments: {query: "{user}"}
+    tool_citations:               # gateway-side citations from the results
+      pattern: "[a-z0-9][a-z0-9-]+::[0-9]{4}"
+      label: Sources
+      skip_pattern: "no information|nothing on|nothing about"   # refusals carry no sources
+    tool_empty:                   # nothing retrieved -> say so, skip the model
+      pattern: '^\s*(\[\s*\])?\s*$|"matched_entities":\s*\[\s*\]'
+      reply: The knowledge graph has nothing on that.
     tool_allowlist: [ontorag__answer, ontorag__search_entities]
     tool_result_max_chars: 6000   # cap retrieval payloads for a small answer model
     tool_arguments:               # hidden from the model, forced on every call
@@ -151,7 +158,7 @@ assistants:
     mcp_servers: [ontorag]
 ```
 
-Each round the gateway asks `tool_backend` first. If it returns tool calls whose confidence (`x_needle.confidence`, or a top-level `confidence`; backends that report none are trusted) clears `tool_confidence`, the calls run against the MCP servers and the round repeats. Otherwise `backend` answers from the conversation, tools withheld. Responses carry an `x_aiproxy.decisions` list showing every round's calls, confidence and whether they ran (and, with `expose_tool_results: true`, the retrieved text, for evaluation harnesses). An evaluation of this setup with RAGAS, TruLens, an ARES-style judge and Mintaka lives in [`evals/two_model_ontorag/`](evals/two_model_ontorag/REPORT.md). `tool_fallback` makes retrieval unconditional: when the specialist's first decision of a turn runs nothing, the gateway calls the configured tool itself with `{user}` replaced by the user's message, so the answer model always has context instead of inventing some. `tool_context: turn` keeps specialists that truncate long inputs honest by showing them only the system prompt and the current turn, and `tool_max_rounds: 1` asks them once per turn, before any tool result is in view. `tool_allowlist`, `tool_descriptions`, `tool_arguments` and `tool_result_max_chars` (usable on any assistant) trim what the models are told about and asked to decide: small tool-calling models degrade with large tool sets and long descriptions written for bigger models, should not be choosing page sizes or dataset ids, and a small answer model cannot absorb thousands of tokens of retrieval payload.
+Each round the gateway asks `tool_backend` first. If it returns tool calls whose confidence (`x_needle.confidence`, or a top-level `confidence`; backends that report none are trusted) clears `tool_confidence`, the calls run against the MCP servers and the round repeats. Otherwise `backend` answers from the conversation, tools withheld. Responses carry an `x_aiproxy.decisions` list showing every round's calls, confidence and whether they ran (and, with `expose_tool_results: true`, the retrieved text, for evaluation harnesses). An evaluation of this setup with RAGAS, TruLens, an ARES-style judge and Mintaka lives in [`evals/two_model_ontorag/`](evals/two_model_ontorag/REPORT.md). `tool_citations` appends the source ids found in the turn's tool results to the answer (small models do not cite reliably when asked; the gateway can), and `tool_empty` returns a fixed reply without calling the answer model when a round retrieved nothing, which small models otherwise paper over. `tool_fallback` makes retrieval unconditional: when the specialist's first decision of a turn runs nothing, the gateway calls the configured tool itself with `{user}` replaced by the user's message, so the answer model always has context instead of inventing some. `tool_context: turn` keeps specialists that truncate long inputs honest by showing them only the system prompt and the current turn, and `tool_max_rounds: 1` asks them once per turn, before any tool result is in view. `tool_allowlist`, `tool_descriptions`, `tool_arguments` and `tool_result_max_chars` (usable on any assistant) trim what the models are told about and asked to decide: small tool-calling models degrade with large tool sets and long descriptions written for bigger models, should not be choosing page sizes or dataset ids, and a small answer model cannot absorb thousands of tokens of retrieval payload.
 
 ### Backends
 

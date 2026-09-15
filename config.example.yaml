@@ -104,6 +104,10 @@ assistants:
   #   tool_fallback:                       # if it declines, retrieve anyway
   #     tool: ontorag__answer
   #     arguments: {query: "{user}"}
+  #   tool_citations:                      # append source ids found in results
+  #     pattern: "[a-z0-9][a-z0-9-]+::[0-9]{4}"
+  #   tool_empty:                          # empty retrieval -> fixed reply, no model call
+  #     reply: The knowledge graph has nothing on that.
   #   tool_allowlist: [ontorag__answer, ontorag__search_entities]   # small sets suit small models
   #   tool_result_max_chars: 6000          # cap retrieval payloads for a small answer model
   #   tool_arguments:                      # hidden from the model, forced on every call

@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 import time
 import uuid
 from typing import Any, AsyncIterator, Optional
@@ -162,6 +163,42 @@ def _decision_record(
     return record
 
 
+def _citations(assistant: AssistantConfig, results: list[dict[str, Any]]) -> list[str]:
+    """Distinct citation ids found in this turn's tool results, in order."""
+    cfg = assistant.tool_citations
+    if cfg is None:
+        return []
+    seen: list[str] = []
+    rx = re.compile(cfg.pattern)
+    for m in results:
+        for hit in rx.findall(m.get("content") or ""):
+            hit = hit if isinstance(hit, str) else hit[0]
+            if hit not in seen:
+                seen.append(hit)
+    return seen[: cfg.max]
+
+
+def _skip_citations(assistant: AssistantConfig, answer: str) -> bool:
+    cfg = assistant.tool_citations
+    return bool(cfg and cfg.skip_pattern and re.search(cfg.skip_pattern, answer or "", re.I))
+
+
+def _with_citations(content: Optional[str], citations: list[str], assistant: AssistantConfig) -> str:
+    text = content or ""
+    if not citations or assistant.tool_citations is None:
+        return text
+    return f"{text.rstrip()}\n\n{assistant.tool_citations.label}: " + ", ".join(citations)
+
+
+def _all_empty(assistant: AssistantConfig, results: list[dict[str, Any]]) -> bool:
+    """True when a round ran tools and every result matches the empty pattern."""
+    cfg = assistant.tool_empty
+    if cfg is None or not results:
+        return False
+    rx = re.compile(cfg.pattern, re.S)
+    return all(rx.search(m.get("content") or "") for m in results)
+
+
 def _last_user_text(msgs: list[dict[str, Any]]) -> str:
     for m in reversed(msgs):
         if m.get("role") != "user":
@@ -204,6 +241,8 @@ async def run(
     usage: dict[str, int] = {}
     last: Optional[Completion] = None
     decisions: list[dict[str, Any]] = []
+    turn_results: list[dict[str, Any]] = []
+    empty_retrieval = False
 
     for i in range(assistant.max_tool_iterations + 1):
         # On the final permitted iteration, drop tools to force a natural answer.
@@ -220,8 +259,12 @@ async def run(
                     toolset, calls or fallback, assistant.tool_result_max_chars
                 )
                 msgs.extend(results)
+                turn_results.extend(results)
                 if assistant.expose_tool_results:
                     decisions[-1]["results"] = [r["content"] for r in results]
+                if _all_empty(assistant, results):
+                    empty_retrieval = True
+                    break
                 continue
             # The specialist declined (or was not confident enough) and there is
             # no fallback: the answer backend replies from whatever the
@@ -233,14 +276,27 @@ async def run(
         _accumulate_usage(usage, last.usage)
         if last.tool_calls and allow_tools:
             msgs.append(_assistant_message(last.content, last.tool_calls))
-            msgs.extend(await _execute_tool_calls(toolset, last.tool_calls, assistant.tool_result_max_chars))
+            results = await _execute_tool_calls(toolset, last.tool_calls, assistant.tool_result_max_chars)
+            msgs.extend(results)
+            turn_results.extend(results)
+            if _all_empty(assistant, results):
+                empty_retrieval = True
+                break
             continue
         break
 
-    content = last.content if last else ""
-    finish = last.finish_reason if last else "stop"
-    if finish == "tool_calls":  # budget exhausted mid-tool-use
+    citations: list[str] = []
+    if empty_retrieval:
+        content = assistant.tool_empty.reply  # type: ignore[union-attr]
         finish = "stop"
+    else:
+        citations = _citations(assistant, turn_results)
+        if _skip_citations(assistant, last.content if last else ""):
+            citations = []
+        content = _with_citations(last.content if last else "", citations, assistant)
+        finish = last.finish_reason if last else "stop"
+        if finish == "tool_calls":  # budget exhausted mid-tool-use
+            finish = "stop"
     result: dict[str, Any] = {
         "id": _new_id(),
         "object": "chat.completion",
@@ -255,8 +311,12 @@ async def run(
         ],
         "usage": usage or {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
     }
-    if tool_backend is not None:
+    if tool_backend is not None or citations or empty_retrieval:
         result["x_aiproxy"] = {"tool_backend": assistant.tool_backend, "decisions": decisions}
+        if citations:
+            result["x_aiproxy"]["citations"] = citations
+        if empty_retrieval:
+            result["x_aiproxy"]["empty_retrieval"] = True
     return result
 
 
@@ -312,6 +372,15 @@ async def run_stream(
     msgs = _prepare_messages(assistant, messages)
     tools = toolset.tools if toolset and not toolset.is_empty else None
     decisions: list[dict[str, Any]] = []
+    turn_results: list[dict[str, Any]] = []
+
+    def _final(finish: Optional[str], extra: Optional[dict[str, Any]] = None) -> str:
+        final = _chunk(stream_id, assistant.name, {}, finish=finish or "stop")
+        if tool_backend is not None or extra:
+            obj = json.loads(final[len("data: ") :])
+            obj["x_aiproxy"] = {"tool_backend": assistant.tool_backend, "decisions": decisions, **(extra or {})}
+            final = f"data: {json.dumps(obj)}\n\n"
+        return final
 
     yield _chunk(stream_id, assistant.name, {"role": "assistant", "content": ""})
     try:
@@ -331,8 +400,14 @@ async def run_stream(
                         toolset, calls or fallback, assistant.tool_result_max_chars
                     )
                     msgs.extend(results)
+                    turn_results.extend(results)
                     if assistant.expose_tool_results:
                         decisions[-1]["results"] = [r["content"] for r in results]
+                    if _all_empty(assistant, results):
+                        yield _chunk(stream_id, assistant.name, {"content": assistant.tool_empty.reply})  # type: ignore[union-attr]
+                        yield _final("stop", {"empty_retrieval": True})
+                        yield "data: [DONE]\n\n"
+                        return
                     continue
                 allow_tools = None
             elif tool_backend is not None:
@@ -354,15 +429,22 @@ async def run_stream(
             tool_calls = _finalize_tool_calls(tool_acc)
             if tool_calls and allow_tools:
                 msgs.append(_assistant_message("".join(content_parts) or None, tool_calls))
-                msgs.extend(await _execute_tool_calls(toolset, tool_calls, assistant.tool_result_max_chars))
+                results = await _execute_tool_calls(toolset, tool_calls, assistant.tool_result_max_chars)
+                msgs.extend(results)
+                turn_results.extend(results)
+                if _all_empty(assistant, results):
+                    yield _chunk(stream_id, assistant.name, {"content": assistant.tool_empty.reply})  # type: ignore[union-attr]
+                    yield _final("stop", {"empty_retrieval": True})
+                    yield "data: [DONE]\n\n"
+                    return
                 continue
 
-            final = _chunk(stream_id, assistant.name, {}, finish=finish_reason or "stop")
-            if tool_backend is not None:
-                obj = json.loads(final[len("data: ") :])
-                obj["x_aiproxy"] = {"tool_backend": assistant.tool_backend, "decisions": decisions}
-                final = f"data: {json.dumps(obj)}\n\n"
-            yield final
+            citations = _citations(assistant, turn_results)
+            if _skip_citations(assistant, "".join(content_parts)):
+                citations = []
+            if citations:
+                yield _chunk(stream_id, assistant.name, {"content": _with_citations("", citations, assistant)})
+            yield _final(finish_reason, {"citations": citations} if citations else None)
             yield "data: [DONE]\n\n"
             return
     except Exception as exc:  # noqa: BLE001 - stream an error then close cleanly

@@ -78,6 +78,37 @@ class ToolFallbackConfig(BaseModel):
     arguments: dict[str, Any] = Field(default_factory=dict)
 
 
+class ToolCitationsConfig(BaseModel):
+    """Append the source ids found in this turn's tool results to the answer.
+
+    ``pattern`` is a regex matched against every tool result; distinct matches
+    (in order of appearance, at most ``max``) are appended as
+    ``\\n\\n<label>: a, b, c`` and reported in ``x_aiproxy.citations``. Small
+    answer models do not cite reliably when asked to; the gateway can.
+    """
+
+    pattern: str
+    label: str = "Sources"
+    max: int = Field(default=8, ge=1)
+    # Do not append sources when the answer matches this (a refusal such as
+    # "the knowledge graph has nothing on that" must not carry citations).
+    skip_pattern: Optional[str] = None
+
+
+class ToolEmptyConfig(BaseModel):
+    """Short-circuit when a tool round retrieved nothing.
+
+    When every executed tool result of a round matches ``pattern`` (an empty
+    string, ``[]``, ``"passages": []`` ...), the answer model is not called and
+    ``reply`` is returned as the assistant message, with
+    ``x_aiproxy.empty_retrieval: true``. Deterministic negative rejection for
+    retrieval assistants whose answer model tends to fill the gap.
+    """
+
+    pattern: str = r"^\s*(\[\s*\]|\{\s*\})?\s*$"
+    reply: str = "I found nothing about that in the knowledge base."
+
+
 class AssistantConfig(BaseModel):
     """A virtual model exposed to clients via the OpenAI ``model`` field."""
 
@@ -114,6 +145,8 @@ class AssistantConfig(BaseModel):
     # for evaluation harnesses that need the retrieved context alongside the
     # answer. Off by default: results can be thousands of characters.
     expose_tool_results: bool = False
+    tool_citations: Optional[ToolCitationsConfig] = None
+    tool_empty: Optional[ToolEmptyConfig] = None
     # Restrict and re-describe the tools this assistant exposes, by exposed name
     # (``<server>__<tool>``). Small tool-calling models degrade with large tool
     # sets and long descriptions; an allow-list of a few tools with one-line

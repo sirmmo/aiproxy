@@ -42,8 +42,15 @@ assistants:
     tool_fallback:
       tool: ontorag__answer
       arguments: {query: "{user}"}
+    tool_citations:
+      pattern: "[a-z0-9][a-z0-9-]+::[0-9]{4}"
+      label: Sources
+      skip_pattern: "no information|nothing on|nothing about|non contiene|nessuna informazione"
+    tool_empty:
+      pattern: '^\s*(\[\s*\])?\s*$|"matched_entities":\s*\[\s*\]'
+      reply: The knowledge graph has nothing on that.
     tool_allowlist: [ontorag__answer, ontorag__search_entities, ontorag__entity_chunks]
-    tool_result_max_chars: 5000
+    tool_result_max_chars: 14000   # the answer tool lists passages last; 5000 clipped them
     tool_arguments:
       ontorag__answer: {k: 3, expand: 1, repo: ""}
       ontorag__search_entities: {limit: 5, repo: ""}
@@ -55,7 +62,8 @@ assistants:
     system_prompt: |
       You answer questions about the Ars Magica tabletop RPG knowledge graph (the Order of Hermes, its Houses, magi, spells and creatures).
       Use ONLY the tool results in the conversation. Answer in a few sentences that summarise what the results say;
-      do not list every fact. Mention the chunk ids you relied on.
+      do not list every fact. Never add names, dates, numbers or explanations that are not in the results,
+      and do not comment on what the results lack.
       If the tool results are empty or missing, say the knowledge graph has nothing on that.
       Answer in the language of the question.
     mcp_servers: [ontorag]
