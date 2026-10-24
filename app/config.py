@@ -55,15 +55,67 @@ class MCPServerConfig(BaseModel):
     description: Optional[str] = None
 
 
-class BackendConfig(BaseModel):
-    """An upstream LLM provider."""
+REFLEX_KINDS = ("no", "yes", "maybe", "random")
 
-    kind: Literal["openai", "anthropic"] = "openai"
-    base_url: str
+
+class BackendConfig(BaseModel):
+    """An upstream LLM provider, or a *reflex* that answers without one.
+
+    ``kind`` ``openai`` / ``anthropic`` talk to a provider at ``base_url``.
+    ``no`` / ``yes`` / ``maybe`` / ``random`` are reflex backends ("system one"):
+    every request is answered with that polarity, shaped to the request (plain
+    text, ``response_format`` documents, tool calls, streaming). See
+    ``app/backends/reflex_backend.py``.
+    """
+
+    kind: Literal["openai", "anthropic", "no", "yes", "maybe", "random"] = "openai"
+    base_url: Optional[str] = None
     api_key: Optional[str] = None
     # Extra headers merged into every request (e.g. org id, provider version).
     default_headers: dict[str, str] = Field(default_factory=dict)
     timeout: float = 300.0
+
+    # --- reflex backends only ---
+    # Override the answer text ("No." / "Yes." / "Maybe." by default).
+    text: Optional[str] = None
+    # ``random``: relative weights of the three polarities (default: equal).
+    weights: dict[str, float] = Field(default_factory=dict)
+    # Seed the random generator for reproducible ``random`` / ``maybe`` answers.
+    seed: Optional[int] = None
+    # ``yes`` with tools on offer: call the ``first`` tool, ``all`` of them, or ``none``.
+    tool_calls: Literal["first", "all", "none"] = "first"
+    # Simulated think time (seconds) before answering, and pause between streamed words.
+    latency: float = Field(default=0.0, ge=0.0)
+    stream_delay: float = Field(default=0.0, ge=0.0)
+
+    @property
+    def is_reflex(self) -> bool:
+        return self.kind in REFLEX_KINDS
+
+    # YAML 1.1 reads a bare `yes` / `no` as a boolean, so `kind: no` arrives as
+    # False and `weights: {yes: 1}` as {True: 1}. Accept both spellings.
+    @field_validator("kind", mode="before")
+    @classmethod
+    def _bool_kind(cls, v: Any) -> Any:
+        if isinstance(v, bool):
+            return "yes" if v else "no"
+        return v
+
+    @field_validator("weights", mode="before")
+    @classmethod
+    def _bool_weight_keys(cls, v: Any) -> Any:
+        if isinstance(v, dict):
+            return {("yes" if k is True else "no" if k is False else k): w for k, w in v.items()}
+        return v
+
+    @model_validator(mode="after")
+    def _check_fields(self) -> "BackendConfig":
+        if not self.is_reflex and not self.base_url:
+            raise ValueError(f"backend kind '{self.kind}' requires 'base_url'")
+        unknown = set(self.weights) - set(REFLEX_KINDS[:3])
+        if unknown:
+            raise ValueError(f"weights accepts only no/yes/maybe, got {sorted(unknown)}")
+        return self
 
 
 class ToolFallbackConfig(BaseModel):
@@ -114,7 +166,8 @@ class AssistantConfig(BaseModel):
 
     name: str
     backend: str
-    model: str
+    # Upstream model id. Optional for reflex backends, which have no model.
+    model: Optional[str] = None
     description: Optional[str] = None
     system_prompt: Optional[str] = None
     mcp_servers: list[str] = Field(default_factory=list)
@@ -241,6 +294,17 @@ class AppConfig(BaseModel):
         if isinstance(v, list):
             return [k for k in v if isinstance(k, str) and k.strip()]
         return v
+
+    @model_validator(mode="after")
+    def _check_assistant_models(self) -> "AppConfig":
+        # A provider backend needs a model id; a reflex backend does not.
+        for a in self.assistants:
+            backend = self.backends.get(a.backend)
+            if backend is not None and not backend.is_reflex and not a.model:
+                raise ValueError(
+                    f"assistant '{a.name}' uses backend '{a.backend}' ({backend.kind}) and needs 'model'"
+                )
+        return self
 
 
 def load_config(path: str | None = None) -> AppConfig:

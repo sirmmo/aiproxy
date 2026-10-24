@@ -67,6 +67,28 @@ backends:
     base_url: ${LOCAL_LLM_URL:-http://host.docker.internal:11434/v1}
     api_key: ${LOCAL_LLM_KEY:-not-needed}
 
+  # Reflex backends ("system one"): no model behind them, they answer every
+  # request with one polarity, shaped to the request (plain text, JSON for
+  # `response_format`, a schema-valid tool call for `yes` when tools are on
+  # offer, SSE when streaming). No network, no keys. Handy as a deterministic
+  # stand-in for an LLM in tests, or as a "no as a service" endpoint.
+  # (Quote "no"/"yes": bare, YAML reads them as booleans. aiproxy accepts
+  # both, but quoting keeps other tools honest.)
+  naas:
+    kind: "no"                            # "No." / false / 0 / [] / never calls a tool
+  yaas:
+    kind: "yes"                           # "Yes." / true / 1 / one item / calls the first tool
+    # tool_calls: first                   # or `all` offered tools, or `none`
+  maas:
+    kind: maybe                           # "Maybe." / null where allowed / 0.5 / coin flips
+  raas:
+    kind: random                          # one of the three above, per request
+    weights: {"yes": 1, "no": 1, maybe: 1}  # relative; omit for equal odds
+    # seed: 42                            # reproducible sequences
+    # text: "Computer says no."           # any reflex: override the answer text
+    # latency: 0.3                        # simulated think time, seconds
+    # stream_delay: 0.05                  # pause between streamed words, seconds
+
 # Virtual models. The `name` is what clients pass as the OpenAI `model` field.
 assistants:
   - name: research-assistant
@@ -87,6 +109,27 @@ assistants:
     system_prompt: Use the tools to compute answers precisely.
     mcp_servers: [echo]
     max_tool_iterations: 4
+
+  # Reflex models: `model` is not needed. Pick them as the OpenAI `model` field.
+  - name: "no"
+    backend: naas
+    description: Always no.
+  - name: "yes"
+    backend: yaas
+    description: Always yes.
+  - name: maybe
+    backend: maas
+    description: Never commits.
+  - name: random
+    backend: raas
+    description: Yes, no or maybe, at random.
+  # A reflex with tools: `yes` calls echo__add with schema-valid arguments,
+  # then answers "Yes." once the result is in view.
+  - name: yes-tools
+    backend: yaas
+    description: Says yes to the first echo tool, then yes.
+    mcp_servers: [echo]
+    max_tool_iterations: 2
 
   # Two-model assistant: a tool-calling specialist decides which tools to call,
   # a chat model writes the answer. Pairs e.g. needle-openai (45M parameters,

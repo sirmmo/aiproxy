@@ -39,6 +39,7 @@ MCP gives you a growing ecosystem of tool servers (web fetch, filesystem, databa
 
 - **OpenAI-compatible API** — `/v1/chat/completions` (streaming *and* non-streaming) and `/v1/models`. Works with the OpenAI SDKs, LangChain, LlamaIndex, `curl`, etc.
 - **Wraps any LLM** — OpenAI-compatible backends (OpenAI, Groq, Together, Mistral, vLLM, Ollama, LM Studio, OpenRouter…) **and** native Anthropic (Messages API), behind one interface.
+- **Reflex models ("system one")** — `no`, `yes`, `maybe` and `random` backends answer without any LLM: plain text, schema-valid JSON for `response_format`, tool calls, streaming. No-as-a-service, a deterministic stand-in for tests, a negative baseline for evals.
 - **Reusable MCP fabric** — attach any number of MCP servers (`stdio`, `sse`, `streamable-http`) to each assistant. Tools are namespaced per server and executed transparently.
 - **Assistants as virtual models** — each `model` a client can pick is a backend + system prompt + set of MCP servers + tool-loop budget.
 - **Two-model assistants** — optionally split the job: a tool-calling specialist (`tool_backend`, e.g. [needle-openai](https://github.com/sirmmo/needle-openai)) decides which tools to call, gated on the confidence it reports, and a chat model that cannot call tools at all (e.g. [openai-MobileMoE](https://github.com/sirmmo/openai-MobileMoE)) writes the answer.
@@ -169,6 +170,38 @@ Each round the gateway asks `tool_backend` first. If it returns tool calls whose
 
 The Anthropic backend translates the canonical chat messages ↔ the Messages API (system prompt, `tool_use`/`tool_result` blocks, streaming events, stop-reason mapping), so tool use works first-class with Claude.
 
+### Reflex models ("system one")
+
+Four more backend kinds answer *without* a model behind them. Each one has a polarity and shapes it to whatever the client asked for:
+
+| `kind`   | Chat        | `response_format` JSON                         | Tools on offer                          |
+|----------|-------------|------------------------------------------------|-----------------------------------------|
+| `no`     | `No.`       | `false`, `0`, `"no"`, `[]`, first "no"-like enum | never calls one                       |
+| `yes`    | `Yes.`      | `true`, `1`/`maximum`, `"yes"`, one item, "yes"-like enum | calls the first tool with schema-valid arguments, then answers `Yes.` |
+| `maybe`  | `Maybe.`    | `null` where allowed, midpoints, `0.5`, coin flips, middle enum | never calls one                 |
+| `random` | one of the above, picked per request by `weights` | idem                     | idem                                    |
+
+```yaml
+backends:
+  naas: {kind: no}
+  yaas: {kind: yes, tool_calls: first}      # or `all` / `none`
+  maas: {kind: maybe}
+  raas: {kind: random, weights: {yes: 1, no: 1, maybe: 1}, seed: 42}
+
+assistants:
+  - {name: "no",  backend: naas}           # no `model` needed
+  - {name: "yes", backend: yaas, mcp_servers: [echo]}
+```
+
+```bash
+curl -s localhost:8000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"no","messages":[{"role":"user","content":"Can I have a raise?"}]}' \
+  | jq -r .choices[0].message.content
+# No.
+```
+
+`json_schema` documents are filled field by field (`$ref`/`$defs`, `anyOf`, `enum`, `const`, `minItems`, `minimum`/`maximum`, date formats), so strict clients validate. Streaming emits the answer word by word; `latency` and `stream_delay` (seconds) simulate a slow model. `text` overrides the answer. Responses report `usage` estimates like any other model.
+
 ### MCP servers
 
 | `transport`               | Fields                         |
@@ -260,6 +293,8 @@ docker build -t aiproxy:latest .
 # End-to-end check — spawns the demo MCP server and drives the full agent
 # loop (streaming + non-streaming) with a scripted fake LLM. No API key needed:
 docker run --rm aiproxy:latest python scripts/smoke_test.py
+# Reflex backends (no / yes / maybe / random): schema filling, tools, streaming.
+docker run --rm aiproxy:latest python scripts/test_reflex.py
 
 # Run the server against your config.yaml (or just `docker compose up`):
 docker run --rm -p 8000:8000 -v "$PWD/config.yaml:/app/config.yaml:ro" aiproxy:latest
@@ -282,7 +317,7 @@ env PYTHONPATH= .venv/bin/uvicorn app.main:app --reload --port 8000
 1. Client `POST /v1/chat/completions` with `model: "<assistant>"`.
 2. Gateway resolves the assistant → backend + MCP servers, and ensures those servers are connected.
 3. It builds the OpenAI tool schema from the servers' tools and enters the agent loop:
-   - call the backend LLM with the messages + tools;
+   - call the backend with the messages + tools (an LLM, or a reflex that answers without one);
    - if the model returns tool calls, execute them **concurrently** against the MCP servers and append the results;
    - repeat until the model answers or `max_tool_iterations` is hit (the last turn drops tools to force a final answer).
 4. Return an OpenAI `chat.completion` (or stream `chat.completion.chunk`s), with the assistant name as the `model` and aggregated token usage.
@@ -296,11 +331,12 @@ app/
   state.py           live registry (assistants/backends/MCP), runtime mutation
   mcp_manager.py     persistent MCP sessions + namespaced ToolSet router
   agent.py           the agentic loop (streaming + non-streaming)
-  backends/          openai + anthropic adapters behind one interface
+  backends/          openai + anthropic adapters, and the reflex (no/yes/maybe/random) responders, behind one interface
   routes/            /v1 (chat) and /admin (registry) endpoints
   auth.py            pluggable auth chain (static keys + Apiman)
 examples/echo_mcp_server.py   demo stdio MCP server
 scripts/smoke_test.py         end-to-end test, no real LLM required
+scripts/test_reflex.py        reflex backends: schema filling, tools, streaming, agent loop
 ```
 
 ## License

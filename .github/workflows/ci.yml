@@ -31,3 +31,8 @@ jobs:
       - name: Run auth chain tests
         # Static keys + both Apiman modes (gateway probe mocked via httpx). No network.
         run: docker run --rm aiproxy:ci python scripts/test_auth.py
+
+      - name: Run reflex backend tests
+        # no / yes / maybe / random responders: schema filling, tool calls,
+        # streaming, config validation, and an agent-loop round trip. No network.
+        run: docker run --rm aiproxy:ci python scripts/test_reflex.py

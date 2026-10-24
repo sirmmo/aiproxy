@@ -206,6 +206,7 @@ flowchart LR
       <div class="grid2">
         <div class="card"><b>OpenAI-compatible</b><p class="muted" style="margin:6px 0 0">Streaming &amp; non-streaming <code>/v1/chat/completions</code> + <code>/v1/models</code>. Works with the OpenAI SDKs, LangChain, LlamaIndex, curl.</p></div>
         <div class="card"><b>Wraps any LLM</b><p class="muted" style="margin:6px 0 0">OpenAI-compatible backends (OpenAI, Groq, vLLM, Ollama, …) and native Anthropic, behind one interface.</p></div>
+        <div class="card"><b>Reflex models ("system one")</b><p class="muted" style="margin:6px 0 0"><code>no</code>, <code>yes</code>, <code>maybe</code> and <code>random</code> backends answer without any LLM — text, schema-valid JSON, tool calls, streaming. No-as-a-service and a deterministic stand-in for tests.</p></div>
         <div class="card"><b>Reusable MCP fabric</b><p class="muted" style="margin:6px 0 0"><code>stdio</code>, <code>sse</code>, <code>streamable-http</code>. Persistent sessions, namespaced tools, concurrent execution.</p></div>
         <div class="card"><b>Two-model assistants</b><p class="muted" style="margin:6px 0 0">A tool-calling specialist (<code>tool_backend</code>, e.g. needle-openai) decides which tools to call, gated on its reported confidence; a chat model that cannot call tools writes the answer.</p></div>
         <div class="card"><b>Runtime admin API</b><p class="muted" style="margin:6px 0 0">Add / edit / remove assistants, backends and MCP servers without a restart.</p></div>
@@ -276,11 +277,46 @@ resp = client.chat.completions.create(
         <tr><th>kind</th><th>Talks to</th><th>Auth header</th></tr>
         <tr><td><code>openai</code></td><td>Any OpenAI-compatible <code>/chat/completions</code> — OpenAI, Groq, Together, Mistral, vLLM, Ollama (<code>/v1</code>), LM&nbsp;Studio, OpenRouter…</td><td><code>Authorization: Bearer</code></td></tr>
         <tr><td><code>anthropic</code></td><td>Native Anthropic <code>/messages</code></td><td><code>x-api-key</code></td></tr>
+        <tr><td><code>no</code> / <code>yes</code> / <code>maybe</code> / <code>random</code></td><td>Nobody — reflex answers shaped to the request (text, <code>response_format</code> JSON, tool calls, SSE)</td><td>—</td></tr>
       </table>
       <p class="muted">
         The Anthropic backend translates the canonical chat messages ↔ the Messages API (system prompt,
         <code>tool_use</code>/<code>tool_result</code> blocks, streaming events, stop-reason mapping), so tool use
         works first-class with Claude.
+      </p>
+
+      <h3 id="reflex">Reflex models (“system one”)</h3>
+      <p class="muted">
+        Four backend kinds answer <em>without</em> a model behind them. Each has a polarity and shapes it to
+        whatever the client asked for, so every response is well-formed: no-as-a-service, a deterministic
+        stand-in for an LLM in tests, a negative baseline for evaluations.
+      </p>
+      <table>
+        <tr><th>kind</th><th>Chat</th><th><code>response_format</code> JSON</th><th>Tools on offer</th></tr>
+        <tr><td><code>no</code></td><td><code>No.</code></td><td><code>false</code>, <code>0</code>/<code>minimum</code>, <code>"no"</code>, <code>[]</code>, first “no”-like enum</td><td>never calls one</td></tr>
+        <tr><td><code>yes</code></td><td><code>Yes.</code></td><td><code>true</code>, <code>1</code>/<code>maximum</code>, <code>"yes"</code>, one item, “yes”-like enum</td><td>calls the first tool with schema-valid arguments, then answers <code>Yes.</code></td></tr>
+        <tr><td><code>maybe</code></td><td><code>Maybe.</code></td><td><code>null</code> where allowed, midpoints, <code>0.5</code>, coin flips, “defer”-like or middle enum</td><td>never calls one</td></tr>
+        <tr><td><code>random</code></td><td colspan="3">one of the three above, picked per request by <code>weights</code></td></tr>
+      </table>
+<pre>backends:
+  naas: {kind: "no"}                       # quote "no"/"yes": bare, YAML reads them as booleans
+  yaas: {kind: "yes", tool_calls: first}   # or `all` / `none`
+  maas: {kind: maybe}
+  raas: {kind: random, weights: {"yes": 1, "no": 1, maybe: 1}, seed: 42}
+
+assistants:
+  - {name: "no",  backend: naas}           # no `model` needed
+  - {name: "yes", backend: yaas, mcp_servers: [echo]}</pre>
+<pre>curl -s localhost:8000/v1/chat/completions -H 'Content-Type: application/json' \
+  -d '{"model":"no","messages":[{"role":"user","content":"Can I have a raise?"}]}' \
+  | jq -r .choices[0].message.content
+# No.</pre>
+      <p class="muted">
+        <code>json_schema</code> documents are filled field by field (<code>$ref</code>/<code>$defs</code>,
+        <code>anyOf</code>, <code>enum</code>, <code>const</code>, <code>minItems</code>,
+        <code>minimum</code>/<code>maximum</code>, date formats), so strict clients validate. Streaming emits the
+        answer word by word; <code>latency</code> and <code>stream_delay</code> (seconds) simulate a slow model;
+        <code>text</code> overrides the answer. Responses report <code>usage</code> estimates like any other model.
       </p>
     </section>
 

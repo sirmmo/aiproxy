@@ -1,6 +1,6 @@
 [project]
 name = "aiproxy"
-version = "0.2.0"
+version = "0.3.0"
 description = "OpenAI-compatible gateway that augments any LLM with a reusable fabric of MCP servers."
 readme = "README.md"
 requires-python = ">=3.10"
